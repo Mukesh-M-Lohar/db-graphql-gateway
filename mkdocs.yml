@@ -5,7 +5,6 @@ repo_name: Mukesh-M-Lohar/db-graphql-gateway
 
 theme:
   name: material
-  custom_dir: docs/overrides  # Optional if we want to override templates later
   palette:
     # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
