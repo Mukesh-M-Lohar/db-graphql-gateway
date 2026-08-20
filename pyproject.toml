@@ -7,26 +7,79 @@ name = "db-graphql-gateway"
 version = "0.1.0"
 description = "Automatically generate a secure, production-ready GraphQL API from a database connection."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [
     { name = "Author", email = "author@example.com" }
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "strawberry-graphql",
-    "sqlalchemy",
+    "strawberry-graphql>=0.200.0",
+    "pyjwt[crypto]>=2.8.0",
+    "pydantic>=2.0.0",
+    "click>=8.1.0",
+    "pyyaml>=6.0.0",
 ]
 
 [project.optional-dependencies]
+postgres = [
+    "asyncpg>=0.28.0",
+]
+fastapi = [
+    "fastapi>=0.141.1",
+    "httpx>=0.28.1",
+]
 dev = [
     "pytest",
     "pytest-asyncio",
-    "black",
     "ruff",
-    "mypy"
+    "mypy",
+    "pre-commit",
+    "testcontainers[postgres]>=4.4.1",
 ]
+
+[project.scripts]
+sgql = "db_graphql_gateway.cli.main:cli"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+ignore = ["D419"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+disallow_subclassing_any = false
+disallow_untyped_decorators = false
+warn_return_any = true
+warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = [
+    "asyncpg.*",
+    "testcontainers.*"
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.7.7",
+    "pre-commit>=4.6.2",
+]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_decorators = false
+disallow_untyped_defs = false

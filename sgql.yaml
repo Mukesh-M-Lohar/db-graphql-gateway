@@ -1,0 +1,11 @@
+auth:
+  algorithms:
+  - HS256
+  - RS256
+  enabled: true
+  provider: jwt
+max_page_size: 100
+security:
+  error_masking: true
+  max_aliases: 15
+  max_depth: 5
