@@ -2,6 +2,8 @@
 
 The `db-graphql-gateway` is designed with a strict separation of concerns, decoupling the database inspection and query compilation from the GraphQL presentation layer and authentication logic.
 
+---
+
 ## 1. Core Execution Pipeline
 
 The life cycle of a GraphQL query from the HTTP request down to the database engine follows this strict pipeline:
@@ -26,12 +28,33 @@ flowchart TD
     F --> A
 ```
 
+---
+
 ## 2. Package Boundaries
 
-- **Database Abstraction (`database/`)**: Adapters (PostgreSQL `asyncpg` via `PostgresAdapter`), schema inspection, normalized models, and query compilers.
-- **Schema Intermediate Representation (`schema/ir/`)**: The source of truth mapping database structure to GraphQL schemas. It is database-agnostic and GraphQL-agnostic. 
-- **GraphQL Generation (`graphql/`)**: Converts the IR into a Strawberry GraphQL schema (types, queries, mutations) and handles execution, filtering, sorting, pagination.
-- **Security & Auth (`auth/`, `security/`)**: Validates callers (e.g., JWT), evaluates contextual policies to generate SQL predicates, and enforces query complexity budgets and AST limits.
+The codebase is strictly separated into four functional areas:
+
+<div class="grid cards" markdown>
+
+-   :material-database: **Database Abstraction**
+    ---
+    Located in `database/`. Handles adapters (PostgreSQL `asyncpg` via `PostgresAdapter`), schema inspection, normalized models, and query compilers.
+
+-   :material-transit-connection-variant: **Schema Intermediate Representation**
+    ---
+    Located in `schema/ir/`. The source of truth mapping database structure to GraphQL schemas. It is database-agnostic and GraphQL-agnostic. 
+
+-   :material-graphql: **GraphQL Generation**
+    ---
+    Located in `graphql/`. Converts the IR into a Strawberry GraphQL schema (types, queries, mutations) and handles execution, filtering, sorting, pagination.
+
+-   :material-security: **Security & Auth**
+    ---
+    Located in `auth/` and `security/`. Validates callers (e.g., JWT), evaluates contextual policies to generate SQL predicates, and enforces query complexity budgets and AST limits.
+
+</div>
+
+---
 
 ## 3. Schema Intermediate Representation (IR)
 
@@ -40,17 +63,16 @@ The Gateway decouples the database schema from the GraphQL schema using the IR (
 1. **Introspection (`inspector.py`)**: Queries PostgreSQL system catalogs (`pg_class`, `pg_attribute`, `pg_constraint`, `pg_enum`) to construct a `DatabaseSchema`.
 2. **IR Build (`IRBuilder`)**: Converts the low-level schema into GraphQL-centric constructs. During this phase, `GatewayConfig` overrides are applied. **Sensitive fields** (e.g., `password`, `token`) are automatically redacted here based on pattern matching.
 
+---
+
 ## 4. GraphQL Schema Generation (Build-Time)
 
-The `GraphQLSchemaBuilder` transforms the IR into a Strawberry GraphQL schema dynamically using Python's `type` function.
-
-This happens exactly **once at startup**.
+The `GraphQLSchemaBuilder` transforms the IR into a Strawberry GraphQL schema dynamically using Python's `type` function. This happens exactly **once at startup**.
 
 ### Dynamic Annotations & Mypy
 Because Strawberry relies heavily on Python's type hints (`__annotations__`) to build the static GraphQL schema, the Builder must dynamically construct these dictionaries for every resolver it generates. 
 
-```python
-# Example: Injecting annotations dynamically to satisfy Strawberry
+```python title="Injecting annotations dynamically to satisfy Strawberry"
 update_fn.__annotations__ = {
     "info": Info,
     "id": pk_type,
@@ -59,7 +81,11 @@ update_fn.__annotations__ = {
     "return": Optional[sb_type],
 }
 ```
-*Note: This architecture cleanly separates the dynamic runtime from static analysis, allowing the core engine to pass strict `mypy` checks.*
+
+!!! note "Strict Typing"
+    This architecture cleanly separates the dynamic runtime from static analysis, allowing the core engine to pass strict `mypy` checks.
+
+---
 
 ## 5. Execution & DataLoading (Per-Request)
 
@@ -70,13 +96,16 @@ Nested relationship fields use Strawberry DataLoaders that batch foreign keys at
 
 ### Optimistic Concurrency & Soft Deletes
 The `IRBuilder` automatically detects `version` and `deleted_at` columns. 
+
 - **Soft Deletes**: List queries automatically append `deleted_at IS NULL` filters, and `delete_` mutations are converted into `update_` operations that set the deletion timestamp.
 - **Optimistic Locking**: Mutations include an `expected_version` argument. If provided, the update query asserts `version = $expected_version` and increments it, failing if another transaction modified the row concurrently.
 
+---
+
 ## 6. Authorization Predicates
 
-> [!IMPORTANT]
-> The Gateway **never** filters sensitive data in Python memory.
+!!! danger "Zero Memory Filtering"
+    The Gateway **never** filters sensitive data in Python memory. All authorization policies are pushed down to the database engine.
 
 The `AuthorizationEngine` evaluates contextual policies and generates SQL predicate ASTs. When the `QueryCompiler` builds the final SQL string, it merges the basic `WHERE` filters with the authorization predicates.
 

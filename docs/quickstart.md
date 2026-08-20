@@ -40,65 +40,107 @@ async def main():
     # The config allows you to hide tables or rename fields. 
     # By default, it auto-hides sensitive fields like 'password' and 'token'.
     config = GatewayConfig()
-    ir_builder = IRBuilder(type_mapper=adapter.type_mapper())
-    ir_types = ir_builder.build(db_schema, config)
+from fastapi import FastAPI
+from db_graphql_gateway import GraphQLGateway
 
-    # 3. Generate Strawberry GraphQL Schema
-    schema_builder = GraphQLSchemaBuilder(
-        db_adapter=adapter,
-        max_page_size=100, # Prevents clients from requesting too many rows
-    )
-    schema = schema_builder.build(ir_types, db_schema=db_schema)
+app = FastAPI(title="GraphQL Gateway")
 
-    # 4. Mount on FastAPI
-    app = FastAPI()
-    router = make_graphql_router(schema)
-    app.include_router(router)
+# 1. Initialize the Gateway
+gateway = GraphQLGateway(
+    database_url="postgresql://postgres:password@localhost:5432/my_database",
+    schema="public"
+)
 
-    config = uvicorn.Config(app, port=8000, log_level="info")
-    server = uvicorn.Server(config)
-    await server.serve()
+# 2. Build the Schema at Startup
+@app.on_event("startup")
+async def startup():
+    await gateway.build_schema()
+
+# 3. Mount the GraphQL Router
+app.include_router(gateway.get_router(), prefix="/graphql")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
 ```
 
-> [!TIP]
-> **Authentication headers** are automatically extracted by the `make_graphql_router` and passed into the `AuthContext`. If you pass an `Authorization: Bearer <jwt>` header in your requests, the underlying `AuthorizationEngine` (if configured) will securely filter database rows!
+!!! tip "Database Configuration"
+    Make sure to replace `postgresql://postgres:password@localhost:5432/my_database` with your actual database connection string.
+
+---
 
 ## 3. Explore the API
 
-Once the server is running, navigate to [http://localhost:8000/graphql](http://localhost:8000/graphql).
+Start your server:
 
-You will see the **GraphiQL** interface where you can explore the automatically generated Schema Docs and execute queries.
+```bash
+python main.py
+```
+
+Open your browser and navigate to the built-in GraphiQL IDE at:
+
+> [**http://localhost:8000/graphql**](http://localhost:8000/graphql)
 
 ### Example: Nested Query with Pagination
 
-```graphql
-query GetActiveUsers {
-  users_connection(
-    first: 10,
-    where: { is_active: { eq: true } },
-    order_by: [{ field: created_at, direction: DESC }]
-  ) {
-    edges {
-      node {
-        id
-        email
-        # O(1) batched DataLoader resolution!
-        tasks {
-          id
-          title
+Thanks to `db-graphql-gateway`, you can immediately execute deeply nested queries without worrying about the N+1 problem.
+
+=== "Query"
+    ```graphql
+    query GetUsersWithPosts {
+      users(first: 10) {
+        edges {
+          node {
+            id
+            email
+            created_at
+            posts(first: 5) {
+              edges {
+                node {
+                  id
+                  title
+                }
+              }
+            }
+          }
         }
       }
     }
-  }
-}
-```
+    ```
+
+=== "Response"
+    ```json
+    {
+      "data": {
+        "users": {
+          "edges": [
+            {
+              "node": {
+                "id": "1",
+                "email": "alice@example.com",
+                "created_at": "2024-01-01T00:00:00",
+                "posts": {
+                  "edges": [
+                    {
+                      "node": {
+                        "id": "101",
+                        "title": "Hello World"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+    ```
+
+---
 
 ## 4. The CLI (`sgql`)
 
-You can use the built-in CLI for various administrative and CI tasks.
+You can use the built-in CLI for various administrative and CI tasks directly from your terminal.
 
 ```bash
 # Check if the database connection and schema are healthy

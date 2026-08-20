@@ -36,6 +36,7 @@ theme:
     - search.suggest
     - search.highlight
     - content.code.copy
+    - content.tabs.link
 
 extra_css:
   - stylesheets/custom.css
