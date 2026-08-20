@@ -1,0 +1,22 @@
+site_name: db-graphql-gateway
+site_description: Secure, performant GraphQL APIs generated directly from your PostgreSQL database.
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+
+nav:
+  - Home: index.md
+  - Quickstart: quickstart.md
+  - Architecture: ARCHITECTURE.md
+  - Specifications: SPEC.md
+  - Security: SECURITY.md
+  - Benchmarks: BENCHMARKS.md
+  - FAQ: FAQ.md
+
+plugins:
+  - search

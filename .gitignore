@@ -37,3 +37,21 @@ ENV/
 .idea/
 .vscode/
 *.swp
+
+# Testing and Linting
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# MkDocs
+site*
+
+# Environment Variables
+.env
+
+# OS generated files
+.DS_Store
+Thumbs.db
