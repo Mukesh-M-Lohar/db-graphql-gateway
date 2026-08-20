@@ -1,0 +1,58 @@
+:root {
+  --md-primary-fg-color: #000000;
+  --md-primary-bg-color: #ffffff;
+  --md-text-color: #374151; /* gray-700 */
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #ffffff;
+  --md-primary-bg-color: #0f111a;
+  --md-typeset-a-color: #526ddb;
+  --md-text-color: #d1d5db; /* gray-300 */
+}
+
+/* Seamless Header like GitBook */
+.md-header {
+  box-shadow: none;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+.md-tabs {
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+
+/* Typography refinements */
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3 {
+  color: var(--md-default-fg-color);
+}
+
+.md-typeset h1 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.md-typeset h2 {
+  font-weight: 600;
+  border-bottom: none;
+  margin-top: 2em;
+}
+
+.md-typeset h3 {
+  font-weight: 600;
+}
+
+.md-typeset p {
+  color: var(--md-text-color);
+  line-height: 1.6;
+}
+
+/* Rounded corners for code blocks */
+.md-typeset pre>code {
+  border-radius: 8px;
+}
+
+/* Sidebar styling */
+.md-nav__link--active {
+  font-weight: 600;
+}
