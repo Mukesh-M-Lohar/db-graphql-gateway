@@ -5,34 +5,40 @@ repo_name: Mukesh-M-Lohar/db-graphql-gateway
 
 theme:
   name: material
+  font:
+    text: Inter
+    code: Fira Code
   palette:
     # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: indigo
-      accent: indigo
+      primary: white
+      accent: custom
       toggle:
-        icon: material/brightness-7
+        icon: material/weather-night
         name: Switch to dark mode
     # Palette toggle for dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: indigo
-      accent: indigo
+      primary: slate
+      accent: custom
       toggle:
-        icon: material/brightness-4
+        icon: material/weather-sunny
         name: Switch to light mode
   features:
-    - navigation.tabs
-    - navigation.tabs.sticky
-    - navigation.sections
-    - navigation.top
+    - navigation.instant
     - navigation.tracking
-    - navigation.footer
+    - navigation.tabs
+    - navigation.sections
+    - navigation.path
+    - navigation.top
     - toc.integrate
     - search.suggest
     - search.highlight
     - content.code.copy
+
+extra_css:
+  - stylesheets/custom.css
 
 nav:
   - Getting Started:
