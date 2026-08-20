@@ -1,22 +1,52 @@
 site_name: db-graphql-gateway
 site_description: Secure, performant GraphQL APIs generated directly from your PostgreSQL database.
+repo_url: https://github.com/Mukesh-M-Lohar/db-graphql-gateway
+repo_name: Mukesh-M-Lohar/db-graphql-gateway
+
 theme:
   name: material
+  custom_dir: docs/overrides  # Optional if we want to override templates later
+  palette:
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
   features:
     - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - navigation.footer
     - toc.integrate
     - search.suggest
     - search.highlight
+    - content.code.copy
 
 nav:
-  - Home: index.md
-  - Quickstart: quickstart.md
-  - Architecture: ARCHITECTURE.md
-  - Specifications: SPEC.md
-  - Security: SECURITY.md
-  - Benchmarks: BENCHMARKS.md
-  - FAQ: FAQ.md
+  - Getting Started:
+      - Home: index.md
+      - Quickstart: quickstart.md
+      - FAQ: FAQ.md
+  - Core Concepts:
+      - Architecture: ARCHITECTURE.md
+      - Security: SECURITY.md
+  - Reference:
+      - Benchmarks: BENCHMARKS.md
+      - Specifications: SPEC.md
+      - Changelog: CHANGELOG.md
 
 plugins:
   - search
