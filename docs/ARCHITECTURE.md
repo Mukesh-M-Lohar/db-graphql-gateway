@@ -11,29 +11,33 @@ The life cycle of a GraphQL query from the HTTP request down to the database eng
 strict pipeline:
 
 ```mermaid
-flowchart TD
-    A[GraphQL HTTP Request] -->|Extract Headers| B(Authentication Provider)
-    B -->|Verified JWT| C(AuthContext Created)
-    C --> D[Query Execution]
-    D -->|Validate AST| E{Security Limits}
-    E -->|Depth / Aliases| F(Strawberry Resolver)
+flowchart TB
+    classDef client fill:#e0f7fa,stroke:#006064,stroke-width:2px,color:#006064
+    classDef security fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#e65100
+    classDef core fill:#e8eaf6,stroke:#1a237e,stroke-width:2px,color:#1a237e
+    classDef db fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#1b5e20
 
-    F -->|Filters & Sorts| G[Query Planner]
-    G -->|Extract FKs| H{DataLoader Registry}
+    Client([GraphQL Client]):::client -->|HTTP POST| Auth(Authentication Provider):::security
 
-    H -->|Batch IDs| I[Authorization Engine]
-    I -->|Inject Row-Level Policies| J[DatabaseAdapter Protocol]
+    subgraph "GraphQL Gateway Pipeline"
+        Auth -->|Verified JWT| Context(Auth Context)
+        Context --> Resolver(Strawberry Resolver):::core
+        
+        subgraph "Execution & Planning"
+            Resolver --> Limits{AST Limits}:::security
+            Limits --> Planner(Query Planner):::core
+            Planner --> DataLoader(DataLoader Registry):::core
+        end
 
-    J --> K{Dialect Adapter}
-    K -->|asyncpg| PG[(PostgreSQL)]
-    K -->|aiosqlite| SQ[(SQLite)]
-    K -->|asyncmy| MY[(MySQL / MariaDB)]
+        subgraph "Security & Database Abstraction"
+            DataLoader --> AuthZ(Authorization Engine):::security
+            AuthZ --> |Inject SQL Policies| AdapterProtocol[[DatabaseAdapter Protocol]]:::core
+        end
+    end
 
-    PG --> J
-    SQ --> J
-    MY --> J
-    J --> F
-    F --> A
+    AdapterProtocol --> PG[(PostgreSQL)]:::db
+    AdapterProtocol --> SQ[(SQLite)]:::db
+    AdapterProtocol --> MY[(MySQL/MariaDB)]:::db
 ```
 
 ---
