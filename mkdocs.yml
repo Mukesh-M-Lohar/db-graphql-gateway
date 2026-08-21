@@ -51,12 +51,12 @@ nav:
   - Get Started:
       - Welcome: index.md
       - Quickstart: quickstart.md
+      - CLI Reference: cli.md
       - FAQ: FAQ.md
       - Changelog: CHANGELOG.md
   - Architecture & Spec:
       - Architecture: ARCHITECTURE.md
   - Packaging & Plugins:
-      - Packaging Plan: PACKAGING_PLAN.md
       - Adapter Contributing: CONTRIBUTING_ADAPTER.md
   - Security & Performance:
       - Security: SECURITY.md
