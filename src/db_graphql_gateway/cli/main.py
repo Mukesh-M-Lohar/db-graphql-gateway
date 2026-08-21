@@ -230,6 +230,22 @@ def doctor(dsn: str | None) -> None:
 
 
 @cli.command()
+@click.option("--port", default=8000, help="Port to serve documentation on")
+def docs(port: int) -> None:
+    """Serve the db-graphql-gateway documentation locally."""
+    click.echo(f"Starting MkDocs server on http://127.0.0.1:{port}...")
+    import subprocess
+    try:
+        subprocess.run(["mkdocs", "serve", "-a", f"127.0.0.1:{port}"], check=True)
+    except FileNotFoundError:
+        click.echo("Error: mkdocs is not installed. Run 'uv pip install mkdocs-material'")
+        sys.exit(1)
+    except subprocess.CalledProcessError:
+        click.echo("Failed to serve documentation.")
+        sys.exit(1)
+
+
+@cli.command()
 def test() -> None:
     """Run generated GraphQL schema unit and integration tests."""
     click.echo("Running gateway test suite...")
