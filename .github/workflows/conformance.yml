@@ -30,4 +30,4 @@ jobs:
         run: uv sync --all-extras --dev
 
       - name: Run Conformance Suite
-        run: uv run pytest tests/conformance/ -v -k "db_adapter[${{ matrix.adapter }}]"
+        run: uv run pytest tests/conformance/ -v -k "[${{ matrix.adapter }}]"
