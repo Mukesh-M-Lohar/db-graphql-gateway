@@ -9,4 +9,4 @@ repos:
     rev: v1.10.0
     hooks:
       - id: mypy
-        additional_dependencies: ["types-PyYAML"]
+        additional_dependencies: ["types-PyYAML", "strawberry-graphql", "PyJWT", "testcontainers"]

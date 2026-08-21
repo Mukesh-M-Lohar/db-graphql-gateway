@@ -1,15 +1,47 @@
 import asyncio
 import os
 import sys
+from urllib.parse import urlparse
 
 import click
 import yaml
 from pydantic import ValidationError
 
-from db_graphql_gateway.version import __version__
 from db_graphql_gateway.schema.config import GatewayConfig
-from db_graphql_gateway.database.adapters.postgres.adapter import PostgresAdapter
-from db_graphql_gateway.database.adapters.postgres.inspector import PostgresSchemaInspector
+from db_graphql_gateway.version import __version__
+
+
+def _get_adapter(dsn: str):
+    parsed = urlparse(dsn)
+
+    if dsn.startswith(("postgresql://", "postgres://")):
+        from db_graphql_gateway.database.adapters.postgres.adapter import PostgresAdapter
+
+        return PostgresAdapter(dsn=dsn)
+
+    elif dsn.startswith("sqlite:///"):
+        from db_graphql_gateway.database.adapters.sqlite.adapter import SQLiteAdapter
+
+        path = parsed.netloc + parsed.path if parsed.netloc else parsed.path.lstrip("/")
+        if not path:
+            path = ":memory:"
+        return SQLiteAdapter(path=path)
+
+    elif dsn.startswith(("mysql://", "mariadb://")):
+        from db_graphql_gateway.database.adapters.mysql.adapter import MySQLAdapter
+
+        db_name = parsed.path.lstrip("/")
+        if not db_name:
+            raise ValueError("Database name is required for MySQL DSN")
+        return MySQLAdapter(
+            host=parsed.hostname or "127.0.0.1",
+            port=parsed.port or 3306,
+            user=parsed.username or "root",
+            password=parsed.password or "",
+            database=db_name,
+        )
+    else:
+        raise ValueError(f"Unsupported database protocol in DSN: {dsn}")
 
 
 @click.group()
@@ -38,7 +70,7 @@ def init() -> None:
 
 
 @cli.command()
-@click.option("--dsn", envvar="DATABASE_URL", help="PostgreSQL connection string")
+@click.option("--dsn", envvar="DATABASE_URL", help="Database connection string")
 def inspect(dsn: str | None) -> None:
     """Inspect database schema and generate Intermediate Representation (IR)."""
     if not dsn:
@@ -46,13 +78,16 @@ def inspect(dsn: str | None) -> None:
         sys.exit(1)
 
     async def _inspect() -> None:
-        adapter = PostgresAdapter(dsn=dsn)
         try:
-            click.echo("Connecting to database...")
+            adapter = _get_adapter(dsn)
+        except ValueError as e:
+            click.echo(f"Error: {e}")
+            sys.exit(1)
+
+        try:
+            click.echo(f"Connecting to database via {adapter.__class__.__name__}...")
             await adapter.connect()
-            if adapter.pool is None:
-                raise RuntimeError("Database connection failed")
-            inspector = PostgresSchemaInspector(adapter.pool)
+            inspector = adapter.inspector()
             schema = await inspector.discover_schema()
 
             tables_count = sum(len(ns.tables) for ns in schema.namespaces.values())
@@ -157,8 +192,9 @@ def doctor(dsn: str | None) -> None:
         click.echo("[FAIL] PyJWT security library: not installed")
 
     try:
-        import strawberry  # noqa: F401
         from importlib.metadata import version
+
+        import strawberry  # noqa: F401
 
         click.echo(f"[OK] Strawberry GraphQL framework: {version('strawberry-graphql')}")
     except ImportError:
@@ -167,18 +203,23 @@ def doctor(dsn: str | None) -> None:
     if dsn:
 
         async def _check_db() -> None:
-            adapter = PostgresAdapter(dsn)
+            try:
+                adapter = _get_adapter(dsn)
+            except ValueError as e:
+                click.echo(f"[FAIL] Database connection: {e}")
+                return
+
             try:
                 await adapter.connect()
-                click.echo("[OK] PostgreSQL database connection: reachable")
+                click.echo(f"[OK] {adapter.__class__.__name__} database connection: reachable")
             except Exception as e:
-                click.echo(f"[FAIL] PostgreSQL database connection: {e}")
+                click.echo(f"[FAIL] Database connection: {e}")
             finally:
                 await adapter.close()
 
         asyncio.run(_check_db())
     else:
-        click.echo("[WARN] PostgreSQL database connection: skipped (no DSN provided)")
+        click.echo("[WARN] Database connection: skipped (no DSN provided)")
 
     if os.path.exists("sgql.yaml"):
         click.echo("[OK] Gateway configuration: found")
@@ -186,6 +227,22 @@ def doctor(dsn: str | None) -> None:
         click.echo("[WARN] Gateway configuration: sgql.yaml not found")
 
     click.echo("System checks complete.")
+
+
+@cli.command()
+@click.option("--port", default=8000, help="Port to serve documentation on")
+def docs(port: int) -> None:
+    """Serve the db-graphql-gateway documentation locally."""
+    click.echo(f"Starting MkDocs server on http://127.0.0.1:{port}...")
+    import subprocess
+    try:
+        subprocess.run(["mkdocs", "serve", "-a", f"127.0.0.1:{port}"], check=True)
+    except FileNotFoundError:
+        click.echo("Error: mkdocs is not installed. Run 'uv pip install mkdocs-material'")
+        sys.exit(1)
+    except subprocess.CalledProcessError:
+        click.echo("Failed to serve documentation.")
+        sys.exit(1)
 
 
 @cli.command()

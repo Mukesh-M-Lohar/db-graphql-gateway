@@ -1,3 +1,5 @@
+"""PostgreSQL adapter using asyncpg connection pooling."""
+
 import logging
 
 import asyncpg
@@ -5,6 +7,7 @@ import asyncpg
 from db_graphql_gateway.database.adapters.interfaces import (
     CompiledQuery,
     DatabaseAdapter,
+    PlaceholderStyle,
     QueryCompiler,
     QueryResult,
     SchemaInspector,
@@ -18,6 +21,12 @@ logger = logging.getLogger(__name__)
 
 
 class PostgresAdapter(DatabaseAdapter):
+    # ── Dialect capability flags ───────────────────────────────────────────
+    supports_returning: bool = True
+    supports_upsert_on_conflict: bool = True
+    placeholder_style: PlaceholderStyle = "numbered"
+    identifier_quote_char: str = '"'
+
     def __init__(self, dsn: str, min_size: int = 1, max_size: int = 10) -> None:
         self.dsn = dsn
         self.min_size = min_size
@@ -40,7 +49,8 @@ class PostgresAdapter(DatabaseAdapter):
             raise RuntimeError("Database not connected")
         logger.debug("SQL: %s | PARAMS: %s", query.sql, query.params)
         async with self.pool.acquire() as conn:
-            records = await conn.fetch(query.sql, *query.params)
+            params = query.params if isinstance(query.params, list) else list(query.params.values())
+            records = await conn.fetch(query.sql, *params)
             return QueryResult(data=[dict(record) for record in records])
 
     async def execute_many(self, queries: list[CompiledQuery]) -> list[QueryResult]:
@@ -49,9 +59,19 @@ class PostgresAdapter(DatabaseAdapter):
         results = []
         async with self.pool.acquire() as conn, conn.transaction():
             for query in queries:
-                records = await conn.fetch(query.sql, *query.params)
+                params = (
+                    query.params if isinstance(query.params, list) else list(query.params.values())
+                )
+                records = await conn.fetch(query.sql, *params)
                 results.append(QueryResult(data=[dict(r) for r in records]))
         return results
+
+    async def execute_raw_dml(self, sql: str) -> None:
+        """Execute raw SQL for testing or schema setup."""
+        if not self.pool:
+            raise RuntimeError("Adapter is not connected")
+        async with self.pool.acquire() as conn:
+            await conn.execute(sql)
 
     def inspector(self) -> SchemaInspector:
         if not self.pool:
