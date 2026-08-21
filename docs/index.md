@@ -1,91 +1,69 @@
-<div align="center" style="margin-top: 4rem; margin-bottom: 2rem;">
-  <h1 style="font-size: 3rem; margin-bottom: 0.5rem; letter-spacing: -0.04em;">db-graphql-gateway</h1>
-  <p style="font-size: 1.25rem; color: var(--md-text-color); max-width: 600px; margin: 0 auto;">
-    Generate secure, production-ready GraphQL APIs directly from your PostgreSQL database schema with O(1) batching and row-level authorization.
-  </p>
-  <div style="margin-top: 1.5rem; display: flex; gap: 10px; justify-content: center;">
-    <a href="quickstart/"><button class="md-button md-button--primary">Get Started</button></a>
-    <a href="https://github.com/db-graphql-gateway/db-graphql-gateway"><button class="md-button">View on GitHub</button></a>
-  </div>
-</div>
+# Welcome to db-graphql-gateway
 
----
+`db-graphql-gateway` is a powerful, database-agnostic library that automatically generates a fully-featured GraphQL schema from your existing database schema. It securely bridges your database directly to GraphQL, providing robust querying, mutation, pagination, and authorization capabilities out of the box without requiring manual schema definition.
 
-`db-graphql-gateway` (CLI: `sgql`) is a powerful introspection and execution engine. It inspects your database schema, constructs an Intermediate Representation (IR), and statically generates a highly optimized **Strawberry GraphQL** schema.
+Fast, extensible, and fully type-checked, `db-graphql-gateway` allows you to expose databases over GraphQL with minimal friction while retaining high performance and granular access control.
 
-Built for modern enterprise architectures, it features robust security constraints, row-level authorization, and strict $O(1)$ batching to eliminate N+1 query problems.
+## Key Features
 
-## ✨ Core Features
+- **Database Agnostic**: Built on a pluggable `DatabaseAdapter` protocol. Currently supports:
+  - PostgreSQL (via `asyncpg`)
+  - MySQL/MariaDB (via `asyncmy`)
+  - SQLite (via `aiosqlite`)
+- **Zero-Memory Filtering (SQL Pushdown)**: All GraphQL filters, sorts, and limits are compiled directly into SQL at the database layer. No full-table scans in memory.
+- **N+1 Safe Batching**: Leverages DataLoader patterns to automatically batch relationship queries (e.g., fetching a user and all their posts executes exactly two queries, not N+1).
+- **Native Authorization**: Generates SQL AST predicates from your GraphQL context, pushing authorization logic directly down to the database query itself.
+- **Strict Typing & Conformance**: Passes a rigorous cross-adapter conformance test suite ensuring identical behavior regardless of the underlying database engine.
 
-<div class="grid cards" markdown>
+## Example Usage
 
--   :material-database-search: **Intelligent Schema Introspection**
+Here is a quick example of how you can instantiate the gateway and execute a query:
 
-    ---
+```python
+import asyncio
+from db_graphql_gateway.database.adapters.postgres.adapter import PostgresAdapter
+from db_graphql_gateway.schema.config import GatewayConfig
+from db_graphql_gateway.graphql.builder import GraphQLSchemaBuilder
+from db_graphql_gateway.auth.authorization import AuthorizationEngine
 
-    Automatically discovers tables, views, primary keys, foreign keys, and enums directly from PostgreSQL system catalogs.
+async def main():
+    # 1. Connect to your database
+    adapter = PostgresAdapter(dsn="postgresql://user:password@localhost:5432/my_db")
+    await adapter.connect()
 
--   :material-rocket-launch: **O(1) DataLoader Batching**
+    # 2. Configure the gateway
+    config = GatewayConfig(enable_mutations=True)
+    auth_engine = AuthorizationEngine()
 
-    ---
+    # 3. Build the GraphQL schema dynamically from the database schema
+    schema_builder = GraphQLSchemaBuilder(adapter, config, auth_engine)
+    schema = await schema_builder.build_schema()
 
-    N+1 query problem solved by default. Relationship fields use Strawberry DataLoaders that compile grouped SQL queries (e.g., `WHERE id IN ($1, $2)`), keeping your API blazing fast.
+    # 4. Execute a GraphQL query
+    query = """
+    query {
+      users(first: 10, filter: { isActive: { eq: true } }) {
+        edges {
+          node {
+            id
+            username
+            posts {
+              title
+            }
+          }
+        }
+      }
+    }
+    """
+    result = await schema.execute(query)
+    print(result.data)
 
--   :material-shield-lock: **Comprehensive Security & Auth**
+    await adapter.close()
 
-    ---
+if __name__ == "__main__":
+    asyncio.run(main())
+```
 
-    Row-Level Authorization transpiled directly into SQL `WHERE` clauses. AST DoS protection with hard limits on query depth, complexity budgets, and aliases.
+## Why use db-graphql-gateway?
 
--   :material-filter-variant: **Filtering, Sorting & Pagination**
-
-    ---
-
-    Relay-compliant cursor pagination, deeply nested relationship filtering, and multi-column sorting generated out of the box.
-
--   :material-history: **Optimistic Concurrency & Soft Deletes**
-
-    ---
-
-    Built-in support for `version` column optimistic locking and automatic `deleted_at` soft-delete filtering.
-
--   :material-api: **FastAPI Integration**
-
-    ---
-
-    Decoupled helpers to easily mount the Gateway on FastAPI with pluggable `AuthContext` injection.
-
-</div>
-
----
-
-## 📖 Documentation Directory
-
-<div class="grid cards" markdown>
-
--   [**Quickstart**](quickstart.md)
-    ---
-    Get a FastAPI GraphQL server running in 2 minutes.
-
--   [**Architecture**](ARCHITECTURE.md)
-    ---
-    Deep dive into the Internal Representation, Planning, and Execution pipelines.
-
--   [**Security**](SECURITY.md)
-    ---
-    How the Gateway transpiles authorization into SQL and protects against DoS attacks.
-
--   [**Benchmarks**](BENCHMARKS.md)
-    ---
-    N+1 query elimination and $O(1)$ relationship scaling.
-
--   [**FAQ**](FAQ.md)
-    ---
-    Common questions regarding design, ORMs, and integrations.
-
-</div>
-
----
-
-!!! tip "Why not just use an ORM?"
-    The Gateway bypasses traditional ORMs to execute dynamic, statically-typed batch queries tailored perfectly to the exact AST requested by the GraphQL client, ensuring minimal memory overhead and zero redundant database hits.
+If you want to instantly securely expose an existing database as a GraphQL API without writing endless resolvers, `db-graphql-gateway` is the perfect fit. Unlike typical ORMs or monolithic frameworks, it strictly adheres to **SQL pushdown**—meaning your application memory stays flat regardless of the size of the tables you're querying.
