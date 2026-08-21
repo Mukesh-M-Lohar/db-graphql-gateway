@@ -173,9 +173,9 @@ async def db_adapter(
             for stmt in get_ddl("postgres"):
                 await conn.execute(stmt)
         try:
-            yield adapter
+            yield pg_adapter
         finally:
-            await adapter.close()
+            await pg_adapter.close()
 
     else:
         raise ValueError(f"Unknown engine: {engine}")
