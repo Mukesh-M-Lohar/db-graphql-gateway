@@ -51,7 +51,7 @@ class JWTAuthenticationProvider(AuthenticationProvider):
                 algorithms=self.algorithms,
                 issuer=self.issuer,
                 audience=self.audience,
-                options=options,
+                options=options,  # type: ignore[arg-type]
             )
 
             user_id = payload.get(self.user_id_claim)

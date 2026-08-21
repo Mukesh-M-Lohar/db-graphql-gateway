@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Any, Type, Optional
 
 import strawberry
+import strawberry.annotation
 from strawberry.types import Info
 from strawberry.schema.config import StrawberryConfig
 from strawberry.types.field import StrawberryField
@@ -58,6 +59,8 @@ class GraphQLSchemaBuilder:
         self.auth_engine = auth_engine
         self.generated_types: dict[str, type] = {}
         self.generated_enums: dict[str, type] = {}
+        # Populated in build(); maps GraphQL type name → source schema name
+        self._schema_map: dict[str, str] = {}
 
     def map_scalar_type(self, type_name: str) -> Type[Any]:
         if type_name in self.generated_enums:
@@ -81,9 +84,6 @@ class GraphQLSchemaBuilder:
             import typing
 
             return typing.cast(Type[Any], strawberry.scalars.JSON)
-            import uuid
-
-            return uuid.UUID
         # Fallback to string for varchar, text, enums, etc.
         return str
 
@@ -107,6 +107,7 @@ class GraphQLSchemaBuilder:
                 )
                 registry = DataLoaderRegistry(
                     self.db_adapter,
+                    schema_map=self._schema_map,
                     auth_engine=self.auth_engine,
                     auth_ctx=auth_ctx,
                 )
@@ -198,6 +199,7 @@ class GraphQLSchemaBuilder:
                 )
                 info.context["dataloader_registry"] = DataLoaderRegistry(
                     self.db_adapter,
+                    schema_map=self._schema_map,
                     auth_engine=self.auth_engine,
                     auth_ctx=auth_ctx_list,
                 )
@@ -256,6 +258,7 @@ class GraphQLSchemaBuilder:
                 )
                 info.context["dataloader_registry"] = DataLoaderRegistry(
                     self.db_adapter,
+                    schema_map=self._schema_map,
                     auth_engine=self.auth_engine,
                     auth_ctx=auth_ctx_conn,
                 )
@@ -297,25 +300,27 @@ class GraphQLSchemaBuilder:
             for idx, row in enumerate(data_rows):
                 node_obj = return_type(**row)
                 cursor_str = encode_cursor(current_offset + idx + 1)
-                edges.append(Edge(node=node_obj, cursor=cursor_str))  # type: ignore[call-arg]
+                edges.append(Edge(node=node_obj, cursor=cursor_str))
 
             start_cursor = edges[0].cursor if edges else None
             end_cursor = edges[-1].cursor if edges else None
 
-            page_info = PageInfo(  # type: ignore[call-arg]
+            page_info = PageInfo(
                 has_next_page=has_next_page,
                 has_previous_page=current_offset > 0,
                 start_cursor=start_cursor,
                 end_cursor=end_cursor,
             )
 
-            return Connection(edges=edges, page_info=page_info)  # type: ignore[call-arg]
+            return Connection(edges=edges, page_info=page_info)
 
         return resolver
 
     def _create_create_mutation_resolver(
         self, ir_type: GraphQLTypeIR, return_type: type
     ) -> Callable[..., Awaitable[Any]]:
+        pk_col = next((f.name for f in ir_type.fields if f.is_primary_key), "id")
+
         async def resolver(info: Info, input: Any) -> Any:
             data = {k: v for k, v in vars(input).items() if v is not None}
 
@@ -324,6 +329,7 @@ class GraphQLSchemaBuilder:
                 operation="insert",
                 table=TableRef(schema=ir_type.source_table.schema, name=ir_type.source_table.name),
                 data=data,
+                pk_column=pk_col,
             )
             compiler = self.db_adapter.compiler()
             compiled_query = compiler.compile_mutation(plan)
@@ -440,6 +446,9 @@ class GraphQLSchemaBuilder:
         db_schema: DatabaseSchema | None = None,
         extensions: list[Any] | None = None,
     ) -> strawberry.Schema:
+        # Build schema_map for DataLoader so it never hardcodes a schema name
+        self._schema_map = {ir.name: ir.source_table.schema for ir in ir_types}
+
         if db_schema:
             self._build_enums(db_schema)
 
