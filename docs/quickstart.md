@@ -16,30 +16,7 @@ Here is a complete example of connecting to your database, building the IR, gene
 
 ```python
 import asyncio
-from fastapi import FastAPI
 import uvicorn
-
-from db_graphql_gateway.database.adapters.postgres.adapter import PostgresAdapter
-from db_graphql_gateway.database.adapters.postgres.inspector import PostgresSchemaInspector
-from db_graphql_gateway.schema.config import GatewayConfig
-from db_graphql_gateway.schema.ir.builder import IRBuilder
-from db_graphql_gateway.graphql.builder import GraphQLSchemaBuilder
-from db_graphql_gateway.integrations.fastapi_integration import make_graphql_router
-
-async def main():
-    dsn = "postgresql://postgres:postgres@localhost:5432/postgres"
-    
-    # 1. Connect and Inspect Database
-    adapter = PostgresAdapter(dsn)
-    await adapter.connect()
-    
-    inspector = PostgresSchemaInspector(adapter.pool)
-    db_schema = await inspector.discover_schema()
-
-    # 2. Build Intermediate Representation (IR)
-    # The config allows you to hide tables or rename fields. 
-    # By default, it auto-hides sensitive fields like 'password' and 'token'.
-    config = GatewayConfig()
 from fastapi import FastAPI
 from db_graphql_gateway import GraphQLGateway
 
@@ -48,12 +25,14 @@ app = FastAPI(title="GraphQL Gateway")
 # 1. Initialize the Gateway
 gateway = GraphQLGateway(
     database_url="postgresql://postgres:password@localhost:5432/my_database",
-    schema="public"
+    schema="public",
+    enable_mutations=True
 )
 
 # 2. Build the Schema at Startup
 @app.on_event("startup")
 async def startup():
+    # Introspects the DB and builds the GraphQL Schema
     await gateway.build_schema()
 
 # 3. Mount the GraphQL Router
