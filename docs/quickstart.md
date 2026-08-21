@@ -1,6 +1,6 @@
 # Quickstart
 
-This guide will walk you through spinning up a full FastAPI GraphQL server over a PostgreSQL database in just a few minutes.
+This guide will walk you through spinning up a full FastAPI GraphQL server over a PostgreSQL, SQLite, or MySQL database in just a few minutes.
 
 ## 1. Installation
 
@@ -18,7 +18,6 @@ Here is a complete example of connecting to your database, building the GraphQL 
 import asyncio
 import uvicorn
 from fastapi import FastAPI
-from db_graphql_gateway.database.adapters.postgres.adapter import PostgresAdapter
 from db_graphql_gateway.schema.config import GatewayConfig
 from db_graphql_gateway.graphql.builder import GraphQLSchemaBuilder
 from db_graphql_gateway.integrations.fastapi_integration import make_graphql_router
@@ -26,7 +25,8 @@ from db_graphql_gateway.integrations.fastapi_integration import make_graphql_rou
 app = FastAPI(title="GraphQL Gateway")
 
 # 1. Connect to DB and Configure
-adapter = PostgresAdapter(dsn="postgresql://postgres:password@localhost:5432/my_database")
+# Check the "Database Adapters" section below for your specific engine!
+adapter = get_my_adapter() 
 config = GatewayConfig()
 schema_builder = GraphQLSchemaBuilder(adapter, config)
 
@@ -44,8 +44,39 @@ if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
 ```
 
-!!! tip "Database Configuration"
-    Make sure to replace `postgresql://postgres:password@localhost:5432/my_database` with your actual database connection string.
+### Database Adapters
+
+Choose your underlying database engine and instantiate the correct adapter:
+
+=== "PostgreSQL"
+    ```python
+    from db_graphql_gateway.database.adapters.postgres.adapter import PostgresAdapter
+
+    def get_my_adapter():
+        return PostgresAdapter(dsn="postgresql://postgres:password@localhost:5432/my_database")
+    ```
+
+=== "SQLite"
+    ```python
+    from db_graphql_gateway.database.adapters.sqlite.adapter import SQLiteAdapter
+
+    def get_my_adapter():
+        return SQLiteAdapter(path="my_database.sqlite")
+    ```
+
+=== "MySQL / MariaDB"
+    ```python
+    from db_graphql_gateway.database.adapters.mysql.adapter import MySQLAdapter
+
+    def get_my_adapter():
+        return MySQLAdapter(
+            host="127.0.0.1",
+            port=3306,
+            user="root",
+            password="password",
+            database="my_database"
+        )
+    ```
 
 ---
 
@@ -125,6 +156,7 @@ You can use the built-in CLI for various administrative and CI tasks directly fr
 
 ```bash
 # Check if the database connection and schema are healthy
+# Use the correct DSN prefix (postgresql://, sqlite:///, mysql://) for your adapter
 sgql doctor --dsn postgresql://user:pass@localhost:5432/db
 
 # Audit your schema for security flaws (depth limits, complexity, masked errors)
