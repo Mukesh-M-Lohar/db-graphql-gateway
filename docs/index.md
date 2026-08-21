@@ -1,23 +1,27 @@
 # Welcome to db-graphql-gateway
 
-`db-graphql-gateway` is a powerful, database-agnostic library that automatically generates a fully-featured GraphQL schema from your existing database schema. It securely bridges your database directly to GraphQL, providing robust querying, mutation, pagination, and authorization capabilities out of the box without requiring manual schema definition.
+`db-graphql-gateway` is a production-grade, reusable Python package that automatically generates a secure, optimized GraphQL API directly from your database connection. It acts as a bridge between your database and GraphQL, translating GraphQL queries into efficient, parameterized SQL without requiring you to manually write resolvers, define schemas, or worry about the typical pitfalls of database-to-API integrations.
 
-Fast, extensible, and fully type-checked, `db-graphql-gateway` allows you to expose databases over GraphQL with minimal friction while retaining high performance and granular access control.
+## Core Principles & Context
 
-## Key Features
+This project was built from the ground up to solve the most difficult problems in exposing databases over GraphQL. It adheres strictly to the following principles:
 
-- **Database Agnostic**: Built on a pluggable `DatabaseAdapter` protocol. Currently supports:
-  - PostgreSQL (via `asyncpg`)
-  - MySQL/MariaDB (via `asyncmy`)
-  - SQLite (via `aiosqlite`)
-- **Zero-Memory Filtering (SQL Pushdown)**: All GraphQL filters, sorts, and limits are compiled directly into SQL at the database layer. No full-table scans in memory.
-- **N+1 Safe Batching**: Leverages DataLoader patterns to automatically batch relationship queries (e.g., fetching a user and all their posts executes exactly two queries, not N+1).
-- **Native Authorization**: Generates SQL AST predicates from your GraphQL context, pushing authorization logic directly down to the database query itself.
-- **Strict Typing & Conformance**: Passes a rigorous cross-adapter conformance test suite ensuring identical behavior regardless of the underlying database engine.
+- **No ORM Required**: The database itself is the source of truth. You don't need to define models in SQLAlchemy, SQLModel, Django, or Prisma just to get a GraphQL API. (Though optional integrations can be layered on top).
+- **Security First**: Authentication and Authorization are treated as separate concerns. Authorization is implemented as **SQL predicates** integrated deep in the query planner, meaning data filtering happens at the database engine level. We never fetch rows into Python memory only to discard them.
+- **Performance & N+1 Prevention**: A sophisticated, request-scoped DataLoader pattern is implemented for relationship batching. Combined with integrated authorization predicates, it guarantees O(1) database queries per relationship depth, completely avoiding N+1 query problems.
+- **Zero Raw SQL Exposure**: Clients never provide SQL fragments. All filters, sorting rules, and pagination constraints are strictly typed GraphQL arguments, protecting you from injection attacks.
+- **Schema Decoupling**: We use a powerful 3-tier architecture: `Database Introspection` -> `Intermediate Representation (IR)` -> `GraphQL Schema`. This decoupled approach allows you to inject YAML configurations (`sgql.yaml`) to rename fields, hide columns, or mutate the graph before it is ever exposed to the client.
+
+## Architecture Highlights
+
+1. **Introspection Phase**: The gateway connects to your database (PostgreSQL, MySQL, SQLite) and introspects tables, columns, primary keys, foreign keys, constraints, and views.
+2. **Intermediate Representation (IR)**: It converts this database schema into a database-agnostic, GraphQL-agnostic IR. This is where configurations are merged to override names or visibility.
+3. **GraphQL Generation**: The IR is used to dynamically build a fully-typed Strawberry GraphQL schema, including root queries, single-object lookups, list queries, filters, and mutations.
+4. **Query Execution**: When a query hits, the Query Planner parses the AST, applies authorization policies, merges filters, and generates highly optimized SQL (using `EXISTS`, `JOIN`, `IN`) to fulfill the request.
 
 ## Example Usage
 
-Here is a quick example of how you can instantiate the gateway and execute a query:
+Here is a quick example of how you can instantiate the gateway and execute a query securely:
 
 ```python
 import asyncio
@@ -35,7 +39,7 @@ async def main():
     config = GatewayConfig(enable_mutations=True)
     auth_engine = AuthorizationEngine()
 
-    # 3. Build the GraphQL schema dynamically from the database schema
+    # 3. Build the GraphQL schema dynamically
     schema_builder = GraphQLSchemaBuilder(adapter, config, auth_engine)
     schema = await schema_builder.build_schema()
 
@@ -64,6 +68,12 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-## Why use db-graphql-gateway?
+## Security & Hardening
 
-If you want to instantly securely expose an existing database as a GraphQL API without writing endless resolvers, `db-graphql-gateway` is the perfect fit. Unlike typical ORMs or monolithic frameworks, it strictly adheres to **SQL pushdown**—meaning your application memory stays flat regardless of the size of the tables you're querying.
+Out of the box, `db-graphql-gateway` provides robust security controls:
+- **Complexity Budgets**: Rejects wildly nested or computationally expensive queries.
+- **Depth & Alias Limits**: Prevents denial-of-service via query expansion.
+- **Tenant-Level Policies**: Row-level security translated to SQL `WHERE` clauses.
+- **Masking & Safety**: Production introspection lockdown and sensitive-field protection by default.
+
+Whether you're building a massive multi-tenant SaaS or just want to quickly expose a read-only dashboard over a SQLite file, `db-graphql-gateway` is designed to be the most reliable, decoupled, and performant bridge available in Python.
