@@ -7,36 +7,38 @@ This guide will walk you through spinning up a full FastAPI GraphQL server over 
 Install the Gateway along with `fastapi` and an ASGI server:
 
 ```bash
-uv add db-graphql-gateway fastapi uvicorn
+uv add "db-graphql-gateway[fastapi]" uvicorn
 ```
 
 ## 2. Server Example
 
-Here is a complete example of connecting to your database, building the IR, generating the Strawberry schema, and mounting it in FastAPI.
+Here is a complete example of connecting to your database, building the GraphQL schema dynamically, and mounting it in FastAPI.
 
 ```python
 import asyncio
 import uvicorn
 from fastapi import FastAPI
-from db_graphql_gateway import GraphQLGateway
+from db_graphql_gateway.database.adapters.postgres.adapter import PostgresAdapter
+from db_graphql_gateway.schema.config import GatewayConfig
+from db_graphql_gateway.graphql.builder import GraphQLSchemaBuilder
+from db_graphql_gateway.integrations.fastapi_integration import make_graphql_router
 
 app = FastAPI(title="GraphQL Gateway")
 
-# 1. Initialize the Gateway
-gateway = GraphQLGateway(
-    database_url="postgresql://postgres:password@localhost:5432/my_database",
-    schema="public",
-    enable_mutations=True
-)
+# 1. Connect to DB and Configure
+adapter = PostgresAdapter(dsn="postgresql://postgres:password@localhost:5432/my_database")
+config = GatewayConfig()
+schema_builder = GraphQLSchemaBuilder(adapter, config)
 
-# 2. Build the Schema at Startup
 @app.on_event("startup")
 async def startup():
-    # Introspects the DB and builds the GraphQL Schema
-    await gateway.build_schema()
-
-# 3. Mount the GraphQL Router
-app.include_router(gateway.get_router(), prefix="/graphql")
+    await adapter.connect()
+    # 2. Introspects DB and builds the Schema
+    schema = await schema_builder.build_schema()
+    
+    # 3. Mount the GraphQL Router
+    graphql_router = make_graphql_router(schema)
+    app.include_router(graphql_router, prefix="/graphql")
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
@@ -123,10 +125,10 @@ You can use the built-in CLI for various administrative and CI tasks directly fr
 
 ```bash
 # Check if the database connection and schema are healthy
-sgql doctor postgresql://user:pass@localhost:5432/db
+sgql doctor --dsn postgresql://user:pass@localhost:5432/db
 
 # Audit your schema for security flaws (depth limits, complexity, masked errors)
-sgql security postgresql://user:pass@localhost:5432/db
+sgql security --config sgql.yaml
 
 # Validate your GatewayConfig overrides (sgql.yaml)
 sgql validate --config sgql.yaml

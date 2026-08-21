@@ -47,7 +47,7 @@ A production-grade, reusable Python package that automatically generates a secur
 - **Exit Criteria**: Tests reject expired, invalid-sig, wrong-issuer, wrong-audience, and bad-alg tokens.
 
 ### Phase 9 — Authorization
-- **Deliverable**: Authorization policy engine resolving table, object, field, relationship, and tenant-level policies into SQL predicates.
+- **Deliverable**: Authorization policy engine resolving table and tenant-level policies into SQL predicates (future phases will expand to field and relationship policies).
 - **Exit Criteria**: **Explicit test**: User A cannot fetch Project B even if they know the ID (predicates prevent loading unauthorized rows).
 
 ### Phase 10 — Security Hardening
@@ -67,5 +67,5 @@ A production-grade, reusable Python package that automatically generates a secur
 - **Exit Criteria**: CLI smoke tests pass for all utility commands.
 
 ### Phase 14 — Final Testing & Documentation
-- **Deliverable**: Full test suite run, security review, performance review, spec-vs-implementation , all the edge cases, fully one to one spec, dont just the run the pytest and say it is finished audit, and using mkdoc under docs folder for the documentation `README.md`, 'quickstart.md', `ARCHITECTURE.md`, `SPEC.md`, `FAQ.md`, `BENCHMARKS.md`, `SECURITY.md`. run and fix pre-commit --all files without suppresing them
+- **Deliverable**: Full test suite run, security review, performance review, and documentation generation using `mkdocs`. Must include `README.md`, `quickstart.md`, `ARCHITECTURE.md`, `SPEC.md`, `FAQ.md`, `BENCHMARKS.md`, and `SECURITY.md`.
 - **Exit Criteria**: Final Acceptance Test passes end-to-end (from `pip install` to secure API serving).

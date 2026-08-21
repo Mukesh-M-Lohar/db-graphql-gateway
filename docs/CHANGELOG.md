@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
+- **Documentation Overhaul**: Complete MkDocs migration with Material theme, Tabbed code blocks, Grid Cards, and Admonitions.
+- **Documentation Audit**: Remediated staleness and cross-file contradictions across all markdown files to match codebase ground truth.
 - **Optimistic Concurrency**: Automatic detection of `version` columns. Generates `expected_version` arguments on update mutations and enforces database-level concurrency checks.
 - **Soft Deletes**: Automatic detection of `deleted_at` columns. Adds implicit `deleted_at IS NULL` filters to read queries and converts `delete_` mutations to timestamp updates.
 - **Complexity Budgets**: New Strawberry AST validation rule to reject queries that exceed a calculated complexity score based on nesting depth and field count.

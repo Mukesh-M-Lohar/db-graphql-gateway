@@ -22,7 +22,10 @@ The adapter acts as a bridge between the engine-agnostic core (`GraphQLSchemaBui
 When configuring your `QueryCompiler` or `Adapter`, you may need to define capability flags that instruct the core gateway on how to handle the dialect's quirks:
 
 - `supports_returning` (bool): Set to `True` if your engine supports `RETURNING` clauses (like Postgres). If `False` (like SQLite/MySQL), the gateway will automatically use a "SELECT-after-write" pattern.
-- `fetch_after_write` (bool): Flag emitted in the `MutationPlan` for engines lacking `RETURNING` to trigger the secondary select.
+- `supports_upsert_on_conflict` (bool): Set to `True` if your engine supports `ON CONFLICT DO UPDATE` or `ON DUPLICATE KEY UPDATE`.
+
+!!! note "SELECT-after-write"
+    If `supports_returning` is `False`, the `BaseQueryCompiler` will dynamically set `fetch_after_write = True` on the `CompiledQuery` returned during mutations. Your adapter's `execute()` method must intercept this and perform the secondary select using `cursor.lastrowid` or the known primary key.
 - `placeholder_style` (enum/string): e.g., `?` for SQLite, `%s` for MySQL, `$1` for Postgres. Ensures parameterized queries match the underlying driver's expectations.
 
 ## Building a New Adapter: Worked Example (SQLite)

@@ -63,7 +63,7 @@ Here is a quick example of how you can instantiate the gateway and execute a que
         await adapter.connect()
 
         # 2. Configure the gateway
-        config = GatewayConfig(enable_mutations=True)
+        config = GatewayConfig()
         auth_engine = AuthorizationEngine()
 
         # 3. Build the GraphQL schema dynamically

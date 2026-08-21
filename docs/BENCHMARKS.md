@@ -1,5 +1,8 @@
 # Benchmarks & Performance
 
+!!! info "Benchmark Integrity"
+    *These metrics were recorded on August 21, 2026 (commit `e2aed85`). All N+1 metrics reflect the modern DataLoader batching pattern using `WHERE id IN ($1, $2, ...)`.*
+
 The `db-graphql-gateway` is designed to provide highly scalable GraphQL querying over relational databases without the performance penalties traditionally associated with ORM-based GraphQL servers.
 
 ## N+1 Query Elimination
