@@ -4,7 +4,11 @@ import time
 from typing import Any
 import jwt
 
-DB_DSN = "postgresql://sgql_test:sgql_password@localhost:5433/sgql_test_db"
+import os
+
+DB_DSN = os.getenv(
+    "SGQL_DATABASE_URL", "postgresql://sgql_test:sgql_password@localhost:5433/sgql_test_db"
+)
 GRAPHQL_URL = "http://localhost:8000/graphql"
 
 SECRET = "supersecretkeythatisatleast32byteslong!"
@@ -26,10 +30,12 @@ def get_token(tenant_id: int, user_id: int) -> str:
 async def execute_query(
     query: str, variables: dict[str, Any] | None = None, tenant_id: int = 1, user_id: int = 1
 ) -> dict[str, Any]:
-    conn = await asyncpg.connect(DB_DSN)
-
-    # Get current query stats state to diff against
-    await conn.execute("SELECT pg_stat_statements_reset()")
+    is_sqlite = DB_DSN.startswith("sqlite")
+    conn = None
+    if not is_sqlite:
+        conn = await asyncpg.connect(DB_DSN)
+        # Get current query stats state to diff against
+        await conn.execute("SELECT pg_stat_statements_reset()")
 
     start_time = time.time()
 
@@ -46,14 +52,15 @@ async def execute_query(
 
     end_time = time.time()
 
-    # Get query count
-    # Note: query count might be multiple due to DataLoader
-    stats = await conn.fetch(
-        "SELECT query, calls FROM pg_stat_statements WHERE query NOT LIKE '%pg_stat_statements%'"
-    )
-    total_queries = sum(row["calls"] for row in stats)
-
-    await conn.close()
+    total_queries = -1
+    if not is_sqlite and conn:
+        # Get query count
+        # Note: query count might be multiple due to DataLoader
+        stats = await conn.fetch(
+            "SELECT query, calls FROM pg_stat_statements WHERE query NOT LIKE '%pg_stat_statements%'"
+        )
+        total_queries = sum(row["calls"] for row in stats)
+        await conn.close()
 
     result = response.json()
     return {

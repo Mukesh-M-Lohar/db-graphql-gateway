@@ -125,3 +125,123 @@ sgql test
 ```
 
 Executes the gateway test suite to ensure resolving logic operates safely.
+
+---
+
+## Configuration Reference (`sgql.yaml`)
+
+Below is a complete, fully annotated `sgql.yaml` configuration example demonstrating all supported fields, security limits, auth providers, and table/field mapping overrides:
+
+```yaml
+# ==============================================================================
+# db-graphql-gateway Configuration (sgql.yaml)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Global Gateway Settings
+# ------------------------------------------------------------------------------
+# Opt-in exposure mode: when false, newly migrated tables/columns stay hidden
+# until explicitly declared under `tables` below.
+auto_expose: false
+
+# Global ceiling for Relay-style cursor pagination (`first` / `last` arguments)
+max_page_size: 100
+
+
+# ------------------------------------------------------------------------------
+# 2. Authentication Provider Settings
+# ------------------------------------------------------------------------------
+auth:
+  enabled: true
+  provider: jwt                 # Auth provider ("jwt" or custom provider)
+  algorithms:
+    - HS256
+    - RS256
+  secret_key: "${JWT_SECRET}"   # Supports environment variable substitution
+  issuer: "https://auth.example.com"
+  audience: "db-graphql-gateway"
+
+
+# ------------------------------------------------------------------------------
+# 3. Security & AST Complexity Hardening
+# ------------------------------------------------------------------------------
+security:
+  # Maximum nesting depth allowed for queries (prevents recursive DoS attacks)
+  max_depth: 5
+
+  # Maximum number of field aliases allowed per query
+  max_aliases: 15
+
+  # Total query complexity point limit calculated at AST validation time
+  max_complexity: 200
+
+  # Production error masking: hides raw asyncpg/SQL tracebacks from clients
+  error_masking: true
+
+  # Lock down __schema introspection queries in production environments
+  disable_introspection: false
+
+
+# ------------------------------------------------------------------------------
+# 4. Sensitive Field Automatic Redaction Patterns
+# ------------------------------------------------------------------------------
+# Any DB column matching these case-insensitive substrings will be automatically
+# omitted from the GraphQL schema during introspection unless overridden below.
+sensitive_field_patterns:
+  - password
+  - pwd
+  - secret
+  - token
+  - hash
+  - ssn
+  - api_key
+  - credit_card
+
+
+# ------------------------------------------------------------------------------
+# 5. Table & Column Granular Mapping / Whitelist
+# ------------------------------------------------------------------------------
+tables:
+  # --- Example 1: Standard Exposed Table with Custom Field Names ---
+  users:
+    graphql_name: User          # Custom GraphQL Type Name (default: table name)
+    hidden: false               # Expose this table in GraphQL schema
+
+    fields:
+      id:
+        graphql_name: id
+        hidden: false
+
+      email:
+        graphql_name: email
+        hidden: false
+
+      password_hash:
+        hidden: true            # Force hide column even if explicitly requested
+
+      created_at:
+        graphql_name: createdAt # CamelCase alias for GraphQL client convention
+        hidden: false
+
+  # --- Example 2: Multi-tenant Organization Table ---
+  organizations:
+    graphql_name: Organization
+    hidden: false
+
+    fields:
+      id:
+        graphql_name: id
+        hidden: false
+
+      name:
+        graphql_name: name
+        hidden: false
+
+      tenant_id:
+        hidden: true            # Internal RLS column; used in SQL WHERE, hidden from GraphQL
+
+  # --- Example 3: Internal / Sensitive Table (Completely Hidden) ---
+  internal_audit_logs:
+    hidden: true                # Hide entire table from GraphQL schema
+```
+

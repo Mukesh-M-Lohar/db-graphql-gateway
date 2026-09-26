@@ -5,6 +5,8 @@ import uvicorn
 from fastapi import FastAPI
 from db_graphql_gateway.schema.config import GatewayConfig
 from db_graphql_gateway.database.adapters.postgres.adapter import PostgresAdapter
+from db_graphql_gateway.database.adapters.sqlite.adapter import SQLiteAdapter
+from db_graphql_gateway.database.adapters.mysql.adapter import MySQLAdapter
 from db_graphql_gateway.schema.ir.builder import IRBuilder
 from db_graphql_gateway.graphql.builder import GraphQLSchemaBuilder
 from db_graphql_gateway.integrations.fastapi_integration import make_graphql_router
@@ -20,7 +22,16 @@ gateway_config = GatewayConfig(**config_data)
 dsn = os.getenv(
     "SGQL_DATABASE_URL", "postgresql://sgql_test:sgql_password@localhost:5433/sgql_test_db"
 )
-adapter = PostgresAdapter(dsn=dsn)
+
+if dsn.startswith("postgresql"):
+    adapter = PostgresAdapter(dsn=dsn)
+elif dsn.startswith("sqlite"):
+    path = dsn.replace("sqlite:///", "")
+    adapter = SQLiteAdapter(path=path)
+elif dsn.startswith("mysql"):
+    adapter = MySQLAdapter(database="todo_parse_dsn")
+else:
+    raise ValueError(f"Unsupported DSN scheme: {dsn}")
 
 
 @app.on_event("startup")

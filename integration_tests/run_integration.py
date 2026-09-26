@@ -6,7 +6,7 @@ from level1_basic import run_level1
 from level2_medium import run_level2
 from level3_advanced import run_level3
 
-DB_DSN = "postgresql://sgql_test:sgql_password@localhost:5433/sgql_test_db"
+from engine import DB_DSN
 
 
 def print_report(results: list[dict[str, Any]]) -> None:
@@ -30,27 +30,48 @@ def print_report(results: list[dict[str, Any]]) -> None:
 
 
 async def main() -> None:
-    print("Fetching active user from DB for tests...")
-    conn = await asyncpg.connect(DB_DSN)
+    print(f"Fetching active user from DB for tests... (DB_DSN={DB_DSN})")
 
-    # Get a power user (highest post count)
-    user = await conn.fetchrow("""
-        SELECT u.id as user_id, u.tenant_id 
-        FROM users u 
-        JOIN posts p ON p.user_id = u.id 
-        GROUP BY u.id, u.tenant_id 
-        ORDER BY count(p.id) DESC 
-        LIMIT 1
-    """)
+    if DB_DSN.startswith("sqlite"):
+        import aiosqlite
 
-    await conn.close()
+        path = DB_DSN.replace("sqlite:///", "")
+        async with aiosqlite.connect(path) as conn:
+            async with conn.execute("""
+                SELECT u.id as user_id, u.tenant_id 
+                FROM users u 
+                JOIN posts p ON p.user_id = u.id 
+                GROUP BY u.id, u.tenant_id 
+                ORDER BY count(p.id) DESC 
+                LIMIT 1
+            """) as cursor:
+                row = await cursor.fetchone()
+                if not row:
+                    print("Error: No users found. Did seed script run?")
+                    sys.exit(1)
+                tenant_id = row[1]
+                user_id = row[0]
+    else:
+        conn = await asyncpg.connect(DB_DSN)
 
-    if not user:
-        print("Error: No users found. Did seed script run?")
-        sys.exit(1)
+        # Get a power user (highest post count)
+        user = await conn.fetchrow("""
+            SELECT u.id as user_id, u.tenant_id 
+            FROM users u 
+            JOIN posts p ON p.user_id = u.id 
+            GROUP BY u.id, u.tenant_id 
+            ORDER BY count(p.id) DESC 
+            LIMIT 1
+        """)
 
-    tenant_id = user["tenant_id"]
-    user_id = user["user_id"]
+        await conn.close()
+
+        if not user:
+            print("Error: No users found. Did seed script run?")
+            sys.exit(1)
+
+        tenant_id = user["tenant_id"]
+        user_id = user["user_id"]
 
     print(f"Running tests as Tenant: {tenant_id}, User: {user_id}")
 
