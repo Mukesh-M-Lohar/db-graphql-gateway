@@ -30,8 +30,8 @@ def make_graphql_router(
     schema: "strawberry.Schema",
     auth_provider: AuthenticationProvider | None = None,
     path: str = "/graphql",
-    max_depth: int | None = None,
-    max_tokens: int | None = None,
+    max_depth: int | None = 15,
+    max_tokens: int | None = 2000,
     disable_introspection: bool = False,
 ) -> "GraphQLRouter":
     if not _HAS_FASTAPI:
