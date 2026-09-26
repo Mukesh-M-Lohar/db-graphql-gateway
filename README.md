@@ -15,6 +15,10 @@ A production-grade, reusable Python package that automatically generates a secur
 
 It acts as a bridge between your database and GraphQL, translating GraphQL queries into efficient, parameterized SQL without requiring you to manually write resolvers, define schemas, or worry about the typical pitfalls of database-to-API integrations.
 
+![GraphiQL IDE showing a nested query against db-graphql-gateway with 3 DB queries total](docs/assets/graphiql_demo.jpg)
+
+> *Live GraphiQL explorer at `localhost:8000/graphql` — zero resolver code written. **3 queries total** for a depth-3 nested query across 5 users.*
+
 ## 📦 Installation
 
 Available on PyPI. Install via `pip` or `uv`:
@@ -114,3 +118,9 @@ The system is decoupled into three primary layers, giving you total control befo
 2. **Intermediate Representation (IR)**: Converts the raw DB schema into a database-agnostic IR. This is where your YAML configurations override names or hide sensitive fields.
 3. **GraphQL Generation**: The IR dynamically builds a fully-typed Strawberry GraphQL schema.
 4. **Query Execution**: ASTs are parsed, authorization policies are merged, and highly optimized SQL (`EXISTS`, `JOIN`, `IN`) is generated to fulfill the request.
+
+## 🤝 Contributing
+
+We welcome contributions! Whether it's fixing a typo, adding a new database adapter, or improving performance, your help is appreciated. 
+
+Please see our [Contributing Guide](CONTRIBUTING.md) for details on how to get started, run tests, and submit pull requests.
