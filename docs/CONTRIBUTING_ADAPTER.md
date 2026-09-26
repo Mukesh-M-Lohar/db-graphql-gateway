@@ -85,6 +85,17 @@ Your PR **will not be merged** unless it passes the Conformance Suite. This suit
 
 If your compiler and type mapper are correct, all tests will pass without writing a single line of test code!
 
+### Passing the Docker Integration Suite
+
+In addition to the Conformance Suite, if you make changes to the core execution engine, GraphQL builder, or authentication flows, you must run the **End-to-End Integration Suite**.
+
+This suite spins up a real PostgreSQL container, seeds a relational schema with data, mounts a FastAPI gateway, and runs advanced HTTP assertions (Deep Nesting limits, N+1 parallelization boundaries, and Row-Level Authentication).
+
+1. Change directory: `cd integration_tests/`
+2. Run the suite: `./run_all.sh`
+
+The script will automatically manage the Docker containers, run all tests, and clean up afterwards.
+
 ## Entry Points & Packaging
 
 To keep the core package lightweight, third-party adapters should be published as separate packages (e.g., `db-graphql-gateway-duckdb`).
