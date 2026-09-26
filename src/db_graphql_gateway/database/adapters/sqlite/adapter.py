@@ -74,7 +74,9 @@ class SQLiteAdapter(DatabaseAdapter):
 
     async def connect(self) -> None:
         """Open the aiosqlite connection and detect RETURNING support."""
-        self._conn = await aiosqlite.connect(self.path)
+        self._conn = await aiosqlite.connect(
+            self.path, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
+        )
         self._conn.row_factory = aiosqlite.Row
         # Enable FK enforcement (off by default in SQLite)
         await self._conn.execute("PRAGMA foreign_keys = ON")
