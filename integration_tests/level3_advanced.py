@@ -129,4 +129,84 @@ async def run_level3(tenant_id: int, user_id: int) -> list[dict[str, Any]]:
         }
     )
 
+    # 5. Backward Pagination (last/before)
+    # First get a forward cursor, then backward paginate from it.
+    query5_setup = """
+    query {
+        posts_connection(first: 3) {
+            edges {
+                node { id }
+                cursor
+            }
+        }
+    }
+    """
+    res5_setup = await execute_query(query5_setup, tenant_id=tenant_id, user_id=user_id)
+    passed5 = False
+    queries5 = -1
+    lat5 = -1
+    
+    if res5_setup["status"] == 200 and not res5_setup["errors"]:
+        edges = res5_setup["data"]["posts_connection"]["edges"]
+        if len(edges) >= 2:
+            cursor = edges[1]["cursor"] # get the cursor of the 2nd item
+            query5 = f"""
+            query {{
+                posts_connection(last: 1, before: "{cursor}") {{
+                    edges {{
+                        node {{ id }}
+                    }}
+                }}
+            }}
+            """
+            res5 = await execute_query(query5, tenant_id=tenant_id, user_id=user_id)
+            passed5 = (
+                res5["status"] == 200
+                and not res5["errors"]
+                and len(res5["data"]["posts_connection"]["edges"]) == 1
+            )
+            queries5 = res5_setup["query_count"] + res5["query_count"]
+            lat5 = res5_setup["latency_ms"] + res5["latency_ms"]
+            
+    results.append(
+        {
+            "name": "L3: Backward Pagination (last/before)",
+            "passed": passed5,
+            "queries": queries5,
+            "latency_ms": lat5,
+        }
+    )
+
+    # 6. Many-to-Many Join Table
+    query6 = """
+    query {
+        posts_connection(first: 5) {
+            edges {
+                node {
+                    id
+                    title
+                    tags {
+                        id
+                        name
+                    }
+                }
+            }
+        }
+    }
+    """
+    res6 = await execute_query(query6, tenant_id=tenant_id, user_id=user_id)
+    passed6 = (
+        res6["status"] == 200
+        and not res6["errors"]
+    )
+    
+    results.append(
+        {
+            "name": "L3: Many-to-Many nested join",
+            "passed": passed6,
+            "queries": res6["query_count"],
+            "latency_ms": res6["latency_ms"],
+        }
+    )
+
     return results
