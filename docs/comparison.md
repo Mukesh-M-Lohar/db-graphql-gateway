@@ -4,6 +4,20 @@ There are several excellent tools in the "Database-to-GraphQL" ecosystem. Howeve
 
 This document provides an honest, detailed comparison, outlining both what `db-graphql-gateway` uniquely offers and **what it does not offer** by design.
 
+## 📊 Feature Matrix
+
+| Feature | `db-graphql-gateway` | PostGraphile | Supabase / `pg_graphql` | Hasura |
+| :--- | :--- | :--- | :--- | :--- |
+| **Primary Language** | Python (ASGI) | Node.js / TypeScript | Rust | Haskell |
+| **Databases** | Postgres, MySQL, SQLite | PostgreSQL only | PostgreSQL only | Postgres, MS SQL, BigQuery |
+| **Auth Model** | App-Tier (SQL Predicates) | DB-Tier (RLS) | DB-Tier (RLS) | App-Tier (Metadata) |
+| **Extensibility** | Native Python / Strawberry | Node.js Plugins | PostgreSQL Functions | Webhooks / Actions |
+| **Deployment** | Python Library | Node.js Server / CLI | Native DB Extension | Standalone Docker / Cloud |
+| **N+1 Prevention** | ✅ Yes (DataLoaders) | ✅ Yes (Lookahead) | ✅ Yes (Native SQL) | ✅ Yes (Native SQL) |
+| **Mutations** | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes |
+| **Subscriptions** | ❌ No | ✅ Yes | ❌ No | ✅ Yes |
+| **API Federation** | ❌ No | 🟡 Schema Stitching | ❌ No | ✅ Yes (Remote Schemas) |
+
 ---
 
 ## 🚀 vs. PostGraphile
