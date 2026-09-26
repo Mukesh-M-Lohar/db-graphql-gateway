@@ -5,6 +5,15 @@ hide:
 
 # db-graphql-gateway
 
+[![PyPI version](https://badge.fury.io/py/db-graphql-gateway.svg)](https://badge.fury.io/py/db-graphql-gateway)
+[![Documentation](https://img.shields.io/badge/docs-MkDocs-blue.svg)](https://Mukesh-M-Lohar.github.io/db-graphql-gateway/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+[![CI](https://github.com/Mukesh-M-Lohar/db-graphql-gateway/actions/workflows/ci.yml/badge.svg)](https://github.com/Mukesh-M-Lohar/db-graphql-gateway/actions/workflows/ci.yml)
+[![Integration](https://github.com/Mukesh-M-Lohar/db-graphql-gateway/actions/workflows/integration.yml/badge.svg)](https://github.com/Mukesh-M-Lohar/db-graphql-gateway/actions/workflows/integration.yml)
+[![Conformance](https://github.com/Mukesh-M-Lohar/db-graphql-gateway/actions/workflows/conformance.yml/badge.svg)](https://github.com/Mukesh-M-Lohar/db-graphql-gateway/actions/workflows/conformance.yml)
+[![Docs](https://github.com/Mukesh-M-Lohar/db-graphql-gateway/actions/workflows/docs.yml/badge.svg)](https://github.com/Mukesh-M-Lohar/db-graphql-gateway/actions/workflows/docs.yml)
+
 A production-grade, reusable Python package that automatically generates a secure, optimized GraphQL API directly from your database connection. 
 
 It acts as a bridge between your database and GraphQL, translating GraphQL queries into efficient, parameterized SQL without requiring you to manually write resolvers, define schemas, or worry about the typical pitfalls of database-to-API integrations.

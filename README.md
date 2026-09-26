@@ -3,7 +3,10 @@
 [![PyPI version](https://badge.fury.io/py/db-graphql-gateway.svg)](https://badge.fury.io/py/db-graphql-gateway)
 [![Documentation](https://img.shields.io/badge/docs-MkDocs-blue.svg)](https://Mukesh-M-Lohar.github.io/db-graphql-gateway/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub Actions CI](https://github.com/Mukesh-M-Lohar/db-graphql-gateway/actions/workflows/integration.yml/badge.svg)](https://github.com/Mukesh-M-Lohar/db-graphql-gateway/actions/workflows/integration.yml)
+[![CI](https://github.com/Mukesh-M-Lohar/db-graphql-gateway/actions/workflows/ci.yml/badge.svg)](https://github.com/Mukesh-M-Lohar/db-graphql-gateway/actions/workflows/ci.yml)
+[![Integration](https://github.com/Mukesh-M-Lohar/db-graphql-gateway/actions/workflows/integration.yml/badge.svg)](https://github.com/Mukesh-M-Lohar/db-graphql-gateway/actions/workflows/integration.yml)
+[![Conformance](https://github.com/Mukesh-M-Lohar/db-graphql-gateway/actions/workflows/conformance.yml/badge.svg)](https://github.com/Mukesh-M-Lohar/db-graphql-gateway/actions/workflows/conformance.yml)
+[![Docs](https://github.com/Mukesh-M-Lohar/db-graphql-gateway/actions/workflows/docs.yml/badge.svg)](https://github.com/Mukesh-M-Lohar/db-graphql-gateway/actions/workflows/docs.yml)
 
 > **📚 Full Documentation:** [Mukesh-M-Lohar.github.io/db-graphql-gateway](https://Mukesh-M-Lohar.github.io/db-graphql-gateway/)  
 > **🐙 GitHub Repository:** [Mukesh-M-Lohar/db-graphql-gateway](https://github.com/Mukesh-M-Lohar/db-graphql-gateway)
