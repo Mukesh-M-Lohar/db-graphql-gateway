@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "db-graphql-gateway"
-version = "0.1.0"
+version = "0.1.1"
 description = "Automatically generate a secure, production-ready GraphQL API from a database connection."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [
-    { name = "Author", email = "author@example.com" }
+    { name = "Mukesh M Lohar", email = "mukesh1lohar@gmail.com" }
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
