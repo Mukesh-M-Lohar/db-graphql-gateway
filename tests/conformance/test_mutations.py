@@ -83,3 +83,63 @@ async def test_soft_deletes(gql_schema: tuple[Any, Any], run_sql: Any) -> None:
     assert res3.data is not None
     assert len(res3.data["articles"]) == 1
     assert res3.data["articles"][0]["id"] == 2
+
+
+async def test_pkless_table_read_only(gql_schema: tuple[Any, Any], run_sql: Any) -> None:
+    schema, adapter = gql_schema
+
+    # 1. mutation create_logs shouldn't exist
+    mutation_query = """
+    mutation {
+        create_logs(input: { message: "test", level: "info" }) {
+            message
+        }
+    }
+    """
+    res = await schema.execute(mutation_query)
+    assert res.errors is not None
+    assert "Cannot query field 'create_logs' on type 'Mutation'" in str(res.errors[0])
+
+    # 2. We can still read from it
+    await run_sql(adapter, "INSERT INTO logs (message, level) VALUES ('Hello', 'INFO')")
+    read_res = await schema.execute("query { logs { message level } }")
+    assert read_res.errors is None
+    assert read_res.data is not None
+    assert read_res.data["logs"][0]["message"] == "Hello"
+
+
+async def test_composite_pk(gql_schema: tuple[Any, Any]) -> None:
+    schema, adapter = gql_schema
+
+    # Create
+    mutation_create = """
+    mutation {
+        create_user_roles(input: { user_id: 1, role_id: 2, assigned_by: 99 }) {
+            user_id
+            role_id
+            assigned_by
+        }
+    }
+    """
+    res = await schema.execute(mutation_create)
+    assert res.errors is None, res.errors
+    assert res.data is not None
+    assert res.data["create_user_roles"]["assigned_by"] == 99
+
+    # Update - passing a JSON object for ID requires GraphQL variables since {user_id: 1, role_id: 2} is parsed as nested objects instead of JSON if written as literal.
+    res = await schema.execute(
+        "mutation($id: JSON!) { update_user_roles(id: $id, input: { assigned_by: 100 }) { assigned_by } }",
+        variable_values={"id": {"user_id": 1, "role_id": 2}},
+    )
+    assert res.errors is None, res.errors
+    assert res.data is not None
+    assert res.data["update_user_roles"]["assigned_by"] == 100
+
+    # Delete
+    res = await schema.execute(
+        "mutation($id: JSON!) { delete_user_roles(id: $id) { user_id } }",
+        variable_values={"id": {"user_id": 1, "role_id": 2}},
+    )
+    assert res.errors is None, res.errors
+    assert res.data is not None
+    assert res.data["delete_user_roles"]["user_id"] == 1

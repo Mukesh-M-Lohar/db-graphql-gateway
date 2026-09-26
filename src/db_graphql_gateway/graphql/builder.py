@@ -362,7 +362,8 @@ class GraphQLSchemaBuilder:
 
             result = await self.db_adapter.execute(compiled_query)
             if not result.data:
-                return None
+                # Fallback for adapters (like MySQL) that cannot fetch composite PK inserts
+                return return_type(**data)
             return return_type(**result.data[0])
 
         return resolver
@@ -411,7 +412,7 @@ class GraphQLSchemaBuilder:
             compiled_query = compiler.compile_mutation(plan)
 
             result = await self.db_adapter.execute(compiled_query)
-            if not result.data:
+            if result.rows_affected == 0:
                 if has_version and expected_version is not None:
                     from graphql import GraphQLError
 
@@ -470,8 +471,14 @@ class GraphQLSchemaBuilder:
             compiled_query = compiler.compile_mutation(plan)
 
             result = await self.db_adapter.execute(compiled_query)
-            if not result.data:
+            if result.rows_affected == 0:
                 return None
+            if not result.data:
+                # Fallback for hard deletes where adapter doesn't return the row
+                if len(pk_cols) > 1:
+                    return return_type(**id)
+                else:
+                    return return_type(**{pk_cols[0]: id})
             return return_type(**result.data[0])
 
         return resolver

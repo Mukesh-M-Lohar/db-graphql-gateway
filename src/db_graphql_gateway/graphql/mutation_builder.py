@@ -12,8 +12,15 @@ def create_mutation_input_types(
     create_annotations: dict[str, Any] = {}
     create_dict: dict[str, Any] = {}
 
+    pk_fields = [f for f in ir_type.fields if f.is_primary_key]
+    is_single_id_pk = len(pk_fields) == 1 and pk_fields[0].name == "id"
+
     for field in ir_type.fields:
-        if field.relationship or field.is_primary_key or field.name == "id":
+        if field.relationship:
+            continue
+
+        # Exclude from CreateInput only if it's the auto-incrementing single 'id' PK
+        if is_single_id_pk and field.name == "id":
             continue
 
         python_type = map_scalar_fn(field.graphql_type)

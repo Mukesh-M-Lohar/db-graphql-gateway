@@ -108,7 +108,10 @@ class IRBuilder:
                     if field_config and field_config.graphql_name:
                         field_name = field_config.graphql_name
 
-                    graphql_type = self.type_mapper.to_graphql_type(col)
+                    if col.type in namespace.enums:
+                        graphql_type = col.type
+                    else:
+                        graphql_type = self.type_mapper.to_graphql_type(col)
 
                     field_ir = GraphQLFieldIR(
                         name=field_name,
@@ -154,7 +157,10 @@ class IRBuilder:
                     if field_config and field_config.graphql_name:
                         field_name = field_config.graphql_name
 
-                    graphql_type = self.type_mapper.to_graphql_type(col)
+                    if col.type in namespace.enums:
+                        graphql_type = col.type
+                    else:
+                        graphql_type = self.type_mapper.to_graphql_type(col)
 
                     field_ir = GraphQLFieldIR(
                         name=field_name,

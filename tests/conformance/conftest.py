@@ -71,6 +71,21 @@ articles = sa.Table(
     sa.Column("deleted_at", sa.DateTime(timezone=True)),
 )
 
+logs = sa.Table(
+    "logs",
+    metadata,
+    sa.Column("message", sa.String(255), nullable=False),
+    sa.Column("level", sa.String(50), nullable=False),
+)
+
+user_roles = sa.Table(
+    "user_roles",
+    metadata,
+    sa.Column("user_id", sa.Integer, primary_key=True),
+    sa.Column("role_id", sa.Integer, primary_key=True),
+    sa.Column("assigned_by", sa.Integer),
+)
+
 
 def get_ddl(engine: str) -> list[str]:
     from sqlalchemy.dialects import postgresql, mysql, sqlite

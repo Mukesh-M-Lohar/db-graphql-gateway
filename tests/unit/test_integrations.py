@@ -11,8 +11,10 @@ from db_graphql_gateway.integrations.fastapi_integration import make_graphql_rou
 class MockAuthProvider(AuthenticationProvider):
     async def authenticate(self, headers: dict[str, str]) -> AuthContext:
         token = headers.get("authorization", "")
-        if "valid" in token:
+        if token == "Bearer valid_token":
             return AuthContext(user_id="user_fastapi", is_authenticated=True)
+        if token:
+            return AuthContext(is_authenticated=False, error="Invalid token")
         return AuthContext(is_authenticated=False)
 
 
@@ -50,3 +52,11 @@ async def test_fastapi_graphql_router() -> None:
     )
     assert res_auth.status_code == 200
     assert cast(dict[str, Any], res_auth.json())["data"]["me"] == "Hello user_fastapi"
+
+    # 3. Invalid token request
+    res_invalid = client.post(
+        "/graphql",
+        json={"query": "{ me }"},
+        headers={"authorization": "Bearer invalid_token"},
+    )
+    assert res_invalid.status_code == 401

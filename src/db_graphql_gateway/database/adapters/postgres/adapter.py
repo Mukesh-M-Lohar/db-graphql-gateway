@@ -49,9 +49,16 @@ class PostgresAdapter(DatabaseAdapter):
             raise RuntimeError("Database not connected")
         logger.debug("SQL: %s | PARAMS: %s", query.sql, query.params)
         async with self.pool.acquire() as conn:
-            params = query.params if isinstance(query.params, list) else list(query.params.values())
+            import enum
+
+            raw_params = (
+                query.params if isinstance(query.params, list) else list(query.params.values())
+            )
+            params = [p.value if isinstance(p, enum.Enum) else p for p in raw_params]
             records = await conn.fetch(query.sql, *params)
-            return QueryResult(data=[dict(record) for record in records])
+            return QueryResult(
+                data=[dict(record) for record in records], rows_affected=len(records)
+            )
 
     async def execute_many(self, queries: list[CompiledQuery]) -> list[QueryResult]:
         if not self.pool:
@@ -59,11 +66,16 @@ class PostgresAdapter(DatabaseAdapter):
         results = []
         async with self.pool.acquire() as conn, conn.transaction():
             for query in queries:
-                params = (
+                import enum
+
+                raw_params = (
                     query.params if isinstance(query.params, list) else list(query.params.values())
                 )
+                params = [p.value if isinstance(p, enum.Enum) else p for p in raw_params]
                 records = await conn.fetch(query.sql, *params)
-                results.append(QueryResult(data=[dict(r) for r in records]))
+                results.append(
+                    QueryResult(data=[dict(r) for r in records], rows_affected=len(records))
+                )
         return results
 
     async def execute_raw_dml(self, sql: str) -> None:

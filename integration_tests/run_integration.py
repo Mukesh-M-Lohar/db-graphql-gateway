@@ -5,6 +5,7 @@ import asyncpg
 from level1_basic import run_level1
 from level2_medium import run_level2
 from level3_advanced import run_level3
+from level4_mutations import run_level4
 
 from engine import DB_DSN
 
@@ -80,6 +81,7 @@ async def main() -> None:
     all_results.extend(await run_level1(tenant_id, user_id))
     all_results.extend(await run_level2(tenant_id, user_id))
     all_results.extend(await run_level3(tenant_id, user_id))
+    all_results.extend(await run_level4(tenant_id, user_id))
 
     print_report(all_results)
 
