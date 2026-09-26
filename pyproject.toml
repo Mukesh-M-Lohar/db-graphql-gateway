@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "db-graphql-gateway"
-version = "0.1.1"
+version = "0.1.2"
 description = "Automatically generate a secure, production-ready GraphQL API from a database connection."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -18,6 +18,13 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+
+[project.urls]
+Homepage = "https://github.com/Mukesh-M-Lohar/db-graphql-gateway"
+Documentation = "https://Mukesh-M-Lohar.github.io/db-graphql-gateway/"
+Repository = "https://github.com/Mukesh-M-Lohar/db-graphql-gateway.git"
+Issues = "https://github.com/Mukesh-M-Lohar/db-graphql-gateway/issues"
+
 dependencies = [
     "strawberry-graphql>=0.200.0",
     "pyjwt[crypto]>=2.8.0",
