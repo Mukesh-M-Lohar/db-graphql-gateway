@@ -590,7 +590,6 @@ wheels = [
 
 [[package]]
 name = "db-graphql-gateway"
-version = "0.1.2"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
@@ -659,7 +658,7 @@ requires-dist = [
     { name = "strawberry-graphql", specifier = ">=0.200.0" },
     { name = "testcontainers", extras = ["postgres"], marker = "extra == 'dev'", specifier = ">=4.4.1" },
 ]
-provides-extras = ["postgres", "fastapi", "dev", "sqlite", "mysql"]
+provides-extras = ["dev", "fastapi", "mysql", "postgres", "sqlite"]
 
 [package.metadata.requires-dev]
 dev = [
