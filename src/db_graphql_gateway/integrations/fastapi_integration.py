@@ -33,6 +33,7 @@ def make_graphql_router(
     max_depth: int | None = 15,
     max_tokens: int | None = 2000,
     disable_introspection: bool = False,
+    context_getter: Any | None = None,
 ) -> "GraphQLRouter":
     if not _HAS_FASTAPI:
         raise ImportError(
@@ -56,7 +57,7 @@ def make_graphql_router(
 
     schema.extensions = tuple(new_extensions)
 
-    async def context_getter(request: Request) -> dict[str, Any]:
+    async def default_context_getter(request: Request) -> dict[str, Any]:
         context: dict[str, Any] = {"request": request}
         if auth_provider and request:
             headers = {k.lower(): v for k, v in request.headers.items()}
@@ -68,4 +69,6 @@ def make_graphql_router(
             context["auth_context"] = auth_context
         return context
 
-    return GraphQLRouter(schema=schema, context_getter=context_getter, path=path)
+    final_context_getter = context_getter or default_context_getter
+
+    return GraphQLRouter(schema=schema, context_getter=final_context_getter, path=path)
