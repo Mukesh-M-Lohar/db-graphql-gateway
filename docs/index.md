@@ -1,6 +1,3 @@
----
----
-
 # db-graphql-gateway
 
 [![PyPI version](https://badge.fury.io/py/db-graphql-gateway.svg)](https://badge.fury.io/py/db-graphql-gateway)
