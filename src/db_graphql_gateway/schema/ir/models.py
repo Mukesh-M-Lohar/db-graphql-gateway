@@ -72,4 +72,5 @@ class GraphQLTypeIR:
     source_table: TableRef
     fields: list[GraphQLFieldIR] = field(default_factory=list)
     is_view: bool = False
+    is_read_only: bool = False
     description: str | None = None

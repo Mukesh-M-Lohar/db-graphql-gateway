@@ -107,8 +107,8 @@ class MySQLAdapter(DatabaseAdapter):
         comp = MySQLQueryCompiler()
         plan = QueryPlan(
             table=TableRef(schema=self.database, name=table),
-            pk_column=pk_col,
-            pk_value=pk_val,
+            pk_columns=[pk_col],
+            pk_values=[pk_val],
         )
         cq = comp.compile(plan)
         pool = self._require_pool()

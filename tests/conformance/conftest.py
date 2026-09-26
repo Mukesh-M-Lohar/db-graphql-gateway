@@ -75,6 +75,7 @@ articles = sa.Table(
 def get_ddl(engine: str) -> list[str]:
     from sqlalchemy.dialects import postgresql, mysql, sqlite
 
+    dialect: Any
     if engine == "postgres":
         dialect = postgresql.dialect()
     elif engine == "mysql":

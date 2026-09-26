@@ -1,3 +1,4 @@
+from db_graphql_gateway.database.adapters.interfaces import DatabaseAdapter
 import asyncio
 import os
 import sys
@@ -11,7 +12,7 @@ from db_graphql_gateway.schema.config import GatewayConfig
 from db_graphql_gateway.version import __version__
 
 
-def _get_adapter(dsn: str):
+def _get_adapter(dsn: str) -> DatabaseAdapter:
     parsed = urlparse(dsn)
 
     if dsn.startswith(("postgresql://", "postgres://")):
@@ -227,22 +228,6 @@ def doctor(dsn: str | None) -> None:
         click.echo("[WARN] Gateway configuration: sgql.yaml not found")
 
     click.echo("System checks complete.")
-
-
-@cli.command()
-@click.option("--port", default=8000, help="Port to serve documentation on")
-def docs(port: int) -> None:
-    """Serve the db-graphql-gateway documentation locally."""
-    click.echo(f"Starting MkDocs server on http://127.0.0.1:{port}...")
-    import subprocess
-    try:
-        subprocess.run(["mkdocs", "serve", "-a", f"127.0.0.1:{port}"], check=True)
-    except FileNotFoundError:
-        click.echo("Error: mkdocs is not installed. Run 'uv pip install mkdocs-material'")
-        sys.exit(1)
-    except subprocess.CalledProcessError:
-        click.echo("Failed to serve documentation.")
-        sys.exit(1)
 
 
 @cli.command()

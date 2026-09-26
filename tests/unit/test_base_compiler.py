@@ -201,7 +201,7 @@ def test_no_returning_sets_fetch_after_write_insert() -> None:
         operation="insert",
         table=TableRef(schema="main", name="users"),
         data={"name": "Alice"},
-        pk_column="id",
+        pk_columns=["id"],
     )
     cq = c.compile_mutation(plan)
     assert "RETURNING" not in cq.sql
@@ -216,8 +216,8 @@ def test_no_returning_sets_fetch_after_write_update() -> None:
         operation="update",
         table=TableRef(schema="main", name="users"),
         data={"name": "Bob"},
-        pk_column="id",
-        pk_value=5,
+        pk_columns=["id"],
+        pk_values=[5],
     )
     cq = c.compile_mutation(plan)
     assert "RETURNING" not in cq.sql
@@ -231,8 +231,8 @@ def test_returning_on_update_when_supported() -> None:
         operation="update",
         table=TableRef(schema="public", name="users"),
         data={"name": "Carol"},
-        pk_column="id",
-        pk_value=7,
+        pk_columns=["id"],
+        pk_values=[7],
     )
     cq = c.compile_mutation(plan)
     assert "RETURNING" in cq.sql

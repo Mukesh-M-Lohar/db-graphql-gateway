@@ -157,9 +157,16 @@ class MySQLSchemaInspector(SchemaInspector):
 
                     tgt_table = ns.tables.get(tgt_table_name)
                     if tgt_table:
+                        base_name = src_table_name.lower()
+                        if tgt_table_name == src_table_name:
+                            prefix = src_cols[0].replace("_id", "") if src_cols else "self"
+                            rel_name_o2m = f"inverse_{prefix}_{base_name}"
+                        else:
+                            rel_name_o2m = f"{base_name}s"
+
                         tgt_table.relationships.append(
                             Relationship(
-                                name=f"{src_table_name.lower()}s",
+                                name=rel_name_o2m,
                                 target_table=src_table_name,
                                 kind="one_to_many",
                                 source_columns=tgt_cols,

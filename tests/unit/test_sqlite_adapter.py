@@ -134,7 +134,7 @@ def test_compiler_insert_no_returning_sets_fetch_flag() -> None:
         operation="insert",
         table=TableRef(schema="main", name="users"),
         data={"name": "Alice"},
-        pk_column="id",
+        pk_columns=["id"],
     )
     cq = c.compile_mutation(plan)
     assert "RETURNING" not in cq.sql

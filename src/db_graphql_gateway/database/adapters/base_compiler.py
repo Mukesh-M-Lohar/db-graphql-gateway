@@ -150,9 +150,10 @@ class BaseQueryCompiler:
         params: list[Any] = []
         where_clauses: list[str] = []
 
-        if plan.pk_column and plan.pk_value is not None:
-            params.append(plan.pk_value)
-            where_clauses.append(f"{self._qi(plan.pk_column)} = {self._ph(params)}")
+        if plan.pk_columns and plan.pk_values is not None:
+            for pk_c, pk_v in zip(plan.pk_columns, plan.pk_values):
+                params.append(pk_v)
+                where_clauses.append(f"{self._qi(pk_c)} = {self._ph(params)}")
 
         if plan.batch_column and plan.batch_values is not None:
             if len(plan.batch_values) == 0:
@@ -222,7 +223,7 @@ class BaseQueryCompiler:
             if not self.supports_returning:
                 cq.fetch_after_write = True
                 cq.fetch_table = plan.table.name
-                cq.fetch_pk_col = plan.pk_column
+                cq.fetch_pk_col = plan.pk_columns[0] if plan.pk_columns else None
                 # pk_value not known yet for INSERT; adapter uses cursor.lastrowid
             return cq
 
@@ -235,9 +236,10 @@ class BaseQueryCompiler:
                 set_clauses.append(f"{self._qi(c)} = {self._ph(params)}")
 
             where_clauses: list[str] = []
-            if plan.pk_column and plan.pk_value is not None:
-                params.append(plan.pk_value)
-                where_clauses.append(f"{self._qi(plan.pk_column)} = {self._ph(params)}")
+            if plan.pk_columns and plan.pk_values is not None:
+                for pk_c, pk_v in zip(plan.pk_columns, plan.pk_values):
+                    params.append(pk_v)
+                    where_clauses.append(f"{self._qi(pk_c)} = {self._ph(params)}")
 
             if plan.filter_tree:
                 where_clauses.append(self._compile_filter(plan.filter_tree, params))
@@ -252,15 +254,16 @@ class BaseQueryCompiler:
             if not self.supports_returning:
                 cq.fetch_after_write = True
                 cq.fetch_table = plan.table.name
-                cq.fetch_pk_col = plan.pk_column
-                cq.fetch_pk_value = plan.pk_value
+                cq.fetch_pk_col = plan.pk_columns[0] if plan.pk_columns else None
+                cq.fetch_pk_value = plan.pk_values[0] if plan.pk_values else None
             return cq
 
         elif plan.operation == "delete":
             where_clauses_del: list[str] = []
-            if plan.pk_column and plan.pk_value is not None:
-                params.append(plan.pk_value)
-                where_clauses_del.append(f"{self._qi(plan.pk_column)} = {self._ph(params)}")
+            if plan.pk_columns and plan.pk_values is not None:
+                for pk_c, pk_v in zip(plan.pk_columns, plan.pk_values):
+                    params.append(pk_v)
+                    where_clauses_del.append(f"{self._qi(pk_c)} = {self._ph(params)}")
 
             if plan.filter_tree:
                 where_clauses_del.append(self._compile_filter(plan.filter_tree, params))
@@ -274,8 +277,8 @@ class BaseQueryCompiler:
             if not self.supports_returning:
                 cq.fetch_after_write = True
                 cq.fetch_table = plan.table.name
-                cq.fetch_pk_col = plan.pk_column
-                cq.fetch_pk_value = plan.pk_value
+                cq.fetch_pk_col = plan.pk_columns[0] if plan.pk_columns else None
+                cq.fetch_pk_value = plan.pk_values[0] if plan.pk_values else None
             return cq
 
         else:

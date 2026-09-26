@@ -195,7 +195,7 @@ def test_no_returning_in_mysql_sql() -> None:
         operation="insert",
         table=TableRef(schema="mydb", name="users"),
         data={"name": "test"},
-        pk_column="id",
+        pk_columns=["id"],
     )
     cq = c.compile_mutation(plan)
     assert "RETURNING" not in cq.sql

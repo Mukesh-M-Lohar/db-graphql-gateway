@@ -114,8 +114,8 @@ class SQLiteAdapter(DatabaseAdapter):
         comp = self._compiler or SQLiteQueryCompiler()
         plan = QueryPlan(
             table=TableRef(schema=SQLITE_MAIN_SCHEMA, name=table),
-            pk_column=pk_col,
-            pk_value=pk_val,
+            pk_columns=[pk_col],
+            pk_values=[pk_val],
         )
         cq = comp.compile(plan)
         async with conn.execute(cq.sql, cq.params) as cur:

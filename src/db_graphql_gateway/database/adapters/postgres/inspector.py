@@ -90,6 +90,24 @@ class PostgresSchemaInspector(SchemaInspector):
                     )
                     table.columns.append(col)
 
+                # 2b. Fetch primary key constraints
+                pk_query = """
+                    SELECT conrelid as table_oid, unnest(conkey) as attnum
+                    FROM pg_constraint
+                    WHERE contype = 'p' AND conrelid = ANY($1)
+                """
+                pk_records = await conn.fetch(pk_query, list(oid_to_table.keys()))
+                for pk in pk_records:
+                    table_oid = pk["table_oid"]
+                    attnum = pk["attnum"]
+                    colname = attnum_to_colname.get((table_oid, attnum))
+                    if colname:
+                        table = oid_to_table[table_oid]
+                        for col in table.columns:
+                            if col.name == colname:
+                                col.is_primary_key = True
+                                break
+
                 # 3. Fetch foreign key constraints to build relationships
                 fk_query = """
                     SELECT
@@ -141,7 +159,12 @@ class PostgresSchemaInspector(SchemaInspector):
 
                     # 2. Add inverse one_to_many relationship on target_table (e.g. user -> posts)
                     if target_table:
-                        rel_name_o2m = f"{src_table_name.lower()}s"
+                        base_name = src_table_name.lower()
+                        if target_table_name == src_table_name:
+                            prefix = src_cols[0].replace("_id", "") if src_cols else "self"
+                            rel_name_o2m = f"inverse_{prefix}_{base_name}"
+                        else:
+                            rel_name_o2m = f"{base_name}s"
                         target_table.relationships.append(
                             Relationship(
                                 name=rel_name_o2m,

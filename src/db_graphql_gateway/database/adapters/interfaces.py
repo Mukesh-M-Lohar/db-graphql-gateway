@@ -50,8 +50,8 @@ class OrderByItem:
 class QueryPlan:
     table: TableRef
     selected_columns: list[str] | None = None
-    pk_column: str | None = None
-    pk_value: Any | None = None
+    pk_columns: list[str] | None = None
+    pk_values: list[Any] | None = None
     filter_tree: FilterGroup | FilterCondition | None = None
     order_by: list[OrderByItem] | None = None
     limit: int | None = None
@@ -66,8 +66,8 @@ class MutationPlan:
     table: TableRef
     data: dict[str, Any] | None = None
     filter_tree: FilterGroup | FilterCondition | None = None
-    pk_column: str | None = None
-    pk_value: Any | None = None
+    pk_columns: list[str] | None = None
+    pk_values: list[Any] | None = None
 
 
 class CompiledQuery:

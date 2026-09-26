@@ -114,19 +114,6 @@ Builds the GraphQL type definitions and wires up the DataLoader resolvers.
 
 ---
 
-### `sgql docs`
-
-Serve the project documentation locally (requires `mkdocs-material`).
-
-**Options:**
-- `--port INTEGER`: Port to serve documentation on (default: `8000`).
-
-```bash
-sgql docs --port 8080
-```
-
-Starts a local MkDocs development server with live reloading, so you can read and browse the gateway documentation and architecture diagrams locally.
-
 ---
 
 ### `sgql test`

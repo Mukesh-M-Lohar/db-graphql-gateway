@@ -48,19 +48,24 @@ repo_url: https://github.com/Mukesh-M-Lohar/db-graphql-gateway
 edit_uri: edit/main/docs/
 
 nav:
-  - Get Started:
-      - Welcome: index.md
+  - Overview:
+      - Introduction: index.md
+      - Architecture: ARCHITECTURE.md
+
+  - Getting Started:
       - Quickstart: quickstart.md
       - CLI Reference: cli.md
       - FAQ: FAQ.md
-      - Changelog: CHANGELOG.md
-  - Architecture & Spec:
-      - Architecture: ARCHITECTURE.md
-  - Packaging & Plugins:
-      - Adapter Contributing: CONTRIBUTING_ADAPTER.md
-  - Security & Performance:
+
+  - Extending the Gateway:
+      - Adapter Development: CONTRIBUTING_ADAPTER.md
+
+  - Production:
       - Security: SECURITY.md
-      - Benchmarks: BENCHMARKS.md
+      - Performance & Benchmarks: BENCHMARKS.md
+
+  - Reference:
+      - Changelog: CHANGELOG.md
 
 markdown_extensions:
   - attr_list

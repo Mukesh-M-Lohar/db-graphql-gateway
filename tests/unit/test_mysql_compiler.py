@@ -80,7 +80,7 @@ def test_compiler_insert_no_returning() -> None:
         operation="insert",
         table=TableRef(schema="mydb", name="users"),
         data={"name": "Alice"},
-        pk_column="id",
+        pk_columns=["id"],
     )
     cq = c.compile_mutation(plan)
     assert "RETURNING" not in cq.sql
@@ -95,8 +95,8 @@ def test_compiler_update_no_returning() -> None:
         operation="update",
         table=TableRef(schema="mydb", name="users"),
         data={"name": "Bob"},
-        pk_column="id",
-        pk_value=3,
+        pk_columns=["id"],
+        pk_values=[3],
     )
     cq = c.compile_mutation(plan)
     assert "RETURNING" not in cq.sql
@@ -109,8 +109,8 @@ def test_compiler_delete_no_returning() -> None:
     plan = MutationPlan(
         operation="delete",
         table=TableRef(schema="mydb", name="users"),
-        pk_column="id",
-        pk_value=5,
+        pk_columns=["id"],
+        pk_values=[5],
     )
     cq = c.compile_mutation(plan)
     assert "RETURNING" not in cq.sql
