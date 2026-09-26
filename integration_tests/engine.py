@@ -64,7 +64,25 @@ async def execute_query(
         else:
             conn = await asyncpg.connect(DB_DSN)
             stats = await conn.fetch(
-                "SELECT query, calls FROM pg_stat_statements WHERE query NOT LIKE '%pg_stat_statements%'"
+                """
+                SELECT query, calls FROM pg_stat_statements
+                WHERE query NOT LIKE '%pg_stat_statements%'
+                  AND query NOT LIKE 'SET %'
+                  AND query NOT LIKE 'BEGIN%'
+                  AND query NOT LIKE 'COMMIT%'
+                  AND query NOT LIKE 'ROLLBACK%'
+                  AND query NOT LIKE 'SHOW %'
+                  AND query NOT LIKE 'SELECT version%'
+                  AND query NOT LIKE 'SELECT current_%'
+                  AND query NOT ILIKE '%pg_catalog%'
+                  AND query NOT ILIKE '%information_schema%'
+                  AND (
+                    query ILIKE 'SELECT %'
+                    OR query ILIKE 'INSERT %'
+                    OR query ILIKE 'UPDATE %'
+                    OR query ILIKE 'DELETE %'
+                  )
+                """
             )
             total_queries = sum(row["calls"] for row in stats)
             await conn.close()
