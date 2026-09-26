@@ -230,6 +230,7 @@ async def test_tinyint1_mapped_to_boolean(mysql_adapter: MySQLAdapter) -> None:
 # Enum mapped to enum
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_mysql_enum_mapped_to_enum(mysql_adapter: MySQLAdapter) -> None:
     inspector = mysql_adapter.inspector()
@@ -246,15 +247,16 @@ async def test_mysql_enum_mapped_to_enum(mysql_adapter: MySQLAdapter) -> None:
     # Type mapper should map it to the synthetic enum name
     mapper = mysql_adapter.type_mapper()
     gql_type = mapper.to_graphql_type(status_col)
-    assert gql_type == f"users_status_enum", f"Expected users_status_enum, got {gql_type!r}"
+    assert gql_type == "users_status_enum", f"Expected users_status_enum, got {gql_type!r}"
 
     # Also test the GraphQL schema builds it correctly
     ir_types = IRBuilder(type_mapper=mapper).build(db_schema, GatewayConfig())
     schema = GraphQLSchemaBuilder(db_adapter=mysql_adapter).build(ir_types, db_schema)
-    
+
     # Check that the enum exists in the schema
     enum_type = schema.get_type_by_name("users_status_enum")
     assert enum_type is not None, "Enum type users_status_enum not found in GraphQL schema"
+
 
 # ---------------------------------------------------------------------------
 # Auth predicate pushdown

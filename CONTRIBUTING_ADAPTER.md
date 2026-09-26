@@ -57,6 +57,15 @@ Before building, verify the following against your driver:
 - [ ] **Boolean Types**: Does the engine lack a native `BOOLEAN`? Ensure your `TypeMapper` intercepts it (e.g., `TINYINT(1) -> BOOLEAN`).
 - [ ] **Upsert Syntax**: Does it use `ON CONFLICT` or `ON DUPLICATE KEY UPDATE`?
 
+### 4. SchemaInspector Expected Behaviors (Checklist)
+
+The `SchemaInspector` must accurately translate the raw database catalog into the canonical `DatabaseSchema` IR. Ensure your inspector handles the following edge cases:
+- [ ] **Self-referencing Foreign Keys**: `Table.relationships` must gracefully handle FKs pointing back to the same table (e.g., `parent_id -> id`).
+- [ ] **Composite Primary Keys**: Ensure `Table.columns` correctly flags multiple columns where `is_primary_key=True` for a single table. The core builder handles these by excluding them from mutations if not explicitly passed.
+- [ ] **Enums**: If your engine uses per-column enums (like MySQL), the inspector must parse the enum values, register a synthetic `Enum` in `DatabaseSchemaNamespace.enums`, and assign that enum's name to the column's type. If your engine uses named types (like Postgres), simply read them from the catalog.
+- [ ] **Read-only Tables**: Tables without any primary keys (e.g., logs, materialized views) should still be discovered. The gateway will automatically suppress mutation generation (create/update/delete) for them while preserving query capabilities.
+- [ ] **Cross-schema Foreign Keys**: If your engine supports them, ensure `target_table` in relationships includes the schema prefix if it differs from the source.
+
 ### Explicit Non-Goals
 The `DatabaseAdapter` protocol does **not** need to support highly proprietary, engine-specific extensions (e.g., Postgres PostGIS, Oracle XMLType) if there is no cross-engine equivalent. Expose these via adapter-level opt-in configuration, not by muddying the core protocol.
 
