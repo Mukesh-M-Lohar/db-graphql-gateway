@@ -12,32 +12,27 @@ strict pipeline:
 
 ```mermaid
 flowchart TB
-    classDef client fill:#e0f7fa,stroke:#006064,stroke-width:2px,color:#006064
-    classDef security fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#e65100
-    classDef core fill:#e8eaf6,stroke:#1a237e,stroke-width:2px,color:#1a237e
-    classDef db fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#1b5e20
-
-    Client([GraphQL Client]):::client -->|HTTP POST| Auth(Authentication Provider):::security
+    Client([GraphQL Client]) -->|HTTP POST| Auth(Authentication Provider)
 
     subgraph "GraphQL Gateway Pipeline"
         Auth -->|Verified JWT| Context(Auth Context)
-        Context --> Resolver(Strawberry Resolver):::core
+        Context --> Resolver(Strawberry Resolver)
         
         subgraph "Execution & Planning"
-            Resolver --> Limits{AST Limits}:::security
-            Limits --> Planner(Query Planner):::core
-            Planner --> DataLoader(DataLoader Registry):::core
+            Resolver --> Limits{AST Limits}
+            Limits --> Planner(Query Planner)
+            Planner --> DataLoader(DataLoader Registry)
         end
 
         subgraph "Security & Database Abstraction"
-            DataLoader --> AuthZ(Authorization Engine):::security
-            AuthZ --> |Inject SQL Policies| AdapterProtocol[[DatabaseAdapter Protocol]]:::core
+            DataLoader --> AuthZ(Authorization Engine)
+            AuthZ --> |Inject SQL Policies| AdapterProtocol[[DatabaseAdapter Protocol]]
         end
     end
 
-    AdapterProtocol --> PG[(PostgreSQL)]:::db
-    AdapterProtocol --> SQ[(SQLite)]:::db
-    AdapterProtocol --> MY[(MySQL/MariaDB)]:::db
+    AdapterProtocol --> PG[(PostgreSQL)]
+    AdapterProtocol --> SQ[(SQLite)]
+    AdapterProtocol --> MY[(MySQL/MariaDB)]
 ```
 
 ---
