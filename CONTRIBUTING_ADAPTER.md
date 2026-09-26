@@ -32,11 +32,11 @@ Let's look at how SQLite was implemented.
 ### 1. Connection & Execution
 ```python
 class SQLiteAdapter(DatabaseAdapter):
-    async def execute_query(self, query: str, params: list[Any]) -> list[dict[str, Any]]:
+    async def execute(self, query: CompiledQuery) -> QueryResult:
         async with self.pool.acquire() as conn:
-            cursor = await conn.execute(query, params)
+            cursor = await conn.execute(query.sql, query.params)
             rows = await cursor.fetchall()
-            return [dict(row) for row in rows]
+            return QueryResult(data=[dict(row) for row in rows], rows_affected=cursor.rowcount)
 ```
 
 ### 2. Query Compilation

@@ -53,6 +53,8 @@ users = sa.Table(
     sa.Column("owner_id", sa.Integer),
     sa.Column("password", sa.String(255)),
     sa.Column("status", sa.Enum("active", "inactive", name="status_enum")),
+    sa.Column("manager_id", sa.Integer, sa.ForeignKey("users.id")),
+    sa.Column("metadata_json", sa.JSON),
 )
 
 tasks = sa.Table(
@@ -78,11 +80,18 @@ logs = sa.Table(
     sa.Column("level", sa.String(50), nullable=False),
 )
 
+roles = sa.Table(
+    "roles",
+    metadata,
+    sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
+    sa.Column("name", sa.String(255), nullable=False),
+)
+
 user_roles = sa.Table(
     "user_roles",
     metadata,
-    sa.Column("user_id", sa.Integer, primary_key=True),
-    sa.Column("role_id", sa.Integer, primary_key=True),
+    sa.Column("user_id", sa.Integer, sa.ForeignKey("users.id"), primary_key=True),
+    sa.Column("role_id", sa.Integer, sa.ForeignKey("roles.id"), primary_key=True),
     sa.Column("assigned_by", sa.Integer),
 )
 

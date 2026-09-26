@@ -108,8 +108,11 @@ async def test_pkless_table_read_only(gql_schema: tuple[Any, Any], run_sql: Any)
     assert read_res.data["logs"][0]["message"] == "Hello"
 
 
-async def test_composite_pk(gql_schema: tuple[Any, Any]) -> None:
+async def test_composite_pk(gql_schema: tuple[Any, Any], run_sql: Any) -> None:
     schema, adapter = gql_schema
+
+    await run_sql(adapter, "INSERT INTO users (id, name) VALUES (1, 'Test User')")
+    await run_sql(adapter, "INSERT INTO roles (id, name) VALUES (2, 'Test Role')")
 
     # Create
     mutation_create = """

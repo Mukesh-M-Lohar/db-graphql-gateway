@@ -89,6 +89,7 @@ dev = [
     "mkdocs-material>=9.7.7",
     "pre-commit>=4.6.2",
     "pyjwt>=2.13.0",
+    "pytest-benchmark>=5.3.0",
     "sqlalchemy>=2.0.52",
     "types-pyyaml>=6.0.12.20260815",
     "uvicorn>=0.54.0",
