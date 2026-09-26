@@ -472,7 +472,11 @@ class GraphQLSchemaBuilder:
 
             result = await self.db_adapter.execute(compiled_query)
             if not result.data:
-                return None
+                # Fallback for hard deletes where adapter doesn't return the row
+                if len(pk_cols) > 1:
+                    return return_type(**id)
+                else:
+                    return return_type(**{pk_cols[0]: id})
             return return_type(**result.data[0])
 
         return resolver
