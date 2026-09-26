@@ -49,7 +49,12 @@ class PostgresAdapter(DatabaseAdapter):
             raise RuntimeError("Database not connected")
         logger.debug("SQL: %s | PARAMS: %s", query.sql, query.params)
         async with self.pool.acquire() as conn:
-            params = query.params if isinstance(query.params, list) else list(query.params.values())
+            import enum
+
+            raw_params = (
+                query.params if isinstance(query.params, list) else list(query.params.values())
+            )
+            params = [p.value if isinstance(p, enum.Enum) else p for p in raw_params]
             records = await conn.fetch(query.sql, *params)
             return QueryResult(data=[dict(record) for record in records])
 
@@ -59,9 +64,12 @@ class PostgresAdapter(DatabaseAdapter):
         results = []
         async with self.pool.acquire() as conn, conn.transaction():
             for query in queries:
-                params = (
+                import enum
+
+                raw_params = (
                     query.params if isinstance(query.params, list) else list(query.params.values())
                 )
+                params = [p.value if isinstance(p, enum.Enum) else p for p in raw_params]
                 records = await conn.fetch(query.sql, *params)
                 results.append(QueryResult(data=[dict(r) for r in records]))
         return results
