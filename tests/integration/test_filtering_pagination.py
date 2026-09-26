@@ -93,6 +93,7 @@ async def test_filtering_and_sorting(pg_adapter_with_data: Any) -> None:
     """
     res_gt = await schema.execute(query_gt)
     assert res_gt.errors is None
+    assert res_gt.data is not None
     assert len(res_gt.data["productss"]) == 2
 
     # Test ilike filter
@@ -105,6 +106,7 @@ async def test_filtering_and_sorting(pg_adapter_with_data: Any) -> None:
     """
     res_ilike = await schema.execute(query_ilike)
     assert res_ilike.errors is None
+    assert res_ilike.data is not None
     names = [p["name"] for p in res_ilike.data["productss"]]
     assert "Mouse" in names
     assert "Monitor" in names
@@ -159,6 +161,7 @@ async def test_pagination_and_max_page_size(pg_adapter_with_data: Any) -> None:
     """
     res_conn_1 = await schema.execute(query_conn_1)
     assert res_conn_1.errors is None, f"Query errors: {res_conn_1.errors}"
+    assert res_conn_1.data is not None
     conn_data = res_conn_1.data["productss_connection"]
     assert len(conn_data["edges"]) == 2
     assert conn_data["edges"][0]["node"]["name"] == "Keyboard"
@@ -187,6 +190,7 @@ async def test_pagination_and_max_page_size(pg_adapter_with_data: Any) -> None:
     """
     res_conn_2 = await schema.execute(query_conn_2)
     assert res_conn_2.errors is None, f"Query errors: {res_conn_2.errors}"
+    assert res_conn_2.data is not None
     conn_data_2 = res_conn_2.data["productss_connection"]
     assert len(conn_data_2["edges"]) == 2
     assert conn_data_2["edges"][0]["node"]["name"] == "Monitor"

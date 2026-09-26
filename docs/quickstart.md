@@ -1,70 +1,82 @@
 # Quickstart
 
-This guide will walk you through spinning up a full FastAPI GraphQL server over a PostgreSQL database in just a few minutes.
+This guide will walk you through spinning up a full FastAPI GraphQL server over a PostgreSQL, SQLite, or MySQL database in just a few minutes.
 
 ## 1. Installation
 
 Install the Gateway along with `fastapi` and an ASGI server:
 
 ```bash
-uv add db-graphql-gateway fastapi uvicorn
+uv add "db-graphql-gateway[fastapi]" uvicorn
 ```
 
 ## 2. Server Example
 
-Here is a complete example of connecting to your database, building the IR, generating the Strawberry schema, and mounting it in FastAPI.
+Here is a complete example of connecting to your database, building the GraphQL schema dynamically, and mounting it in FastAPI.
 
 ```python
 import asyncio
-from fastapi import FastAPI
 import uvicorn
-
-from db_graphql_gateway.database.adapters.postgres.adapter import PostgresAdapter
-from db_graphql_gateway.database.adapters.postgres.inspector import PostgresSchemaInspector
+from fastapi import FastAPI
 from db_graphql_gateway.schema.config import GatewayConfig
-from db_graphql_gateway.schema.ir.builder import IRBuilder
 from db_graphql_gateway.graphql.builder import GraphQLSchemaBuilder
 from db_graphql_gateway.integrations.fastapi_integration import make_graphql_router
 
-async def main():
-    dsn = "postgresql://postgres:postgres@localhost:5432/postgres"
-    
-    # 1. Connect and Inspect Database
-    adapter = PostgresAdapter(dsn)
-    await adapter.connect()
-    
-    inspector = PostgresSchemaInspector(adapter.pool)
-    db_schema = await inspector.discover_schema()
-
-    # 2. Build Intermediate Representation (IR)
-    # The config allows you to hide tables or rename fields. 
-    # By default, it auto-hides sensitive fields like 'password' and 'token'.
-    config = GatewayConfig()
-from fastapi import FastAPI
-from db_graphql_gateway import GraphQLGateway
-
 app = FastAPI(title="GraphQL Gateway")
 
-# 1. Initialize the Gateway
-gateway = GraphQLGateway(
-    database_url="postgresql://postgres:password@localhost:5432/my_database",
-    schema="public"
-)
+# 1. Connect to DB and Configure
+# Check the "Database Adapters" section below for your specific engine!
+adapter = get_my_adapter() 
+config = GatewayConfig()
+schema_builder = GraphQLSchemaBuilder(adapter, config)
 
-# 2. Build the Schema at Startup
 @app.on_event("startup")
 async def startup():
-    await gateway.build_schema()
-
-# 3. Mount the GraphQL Router
-app.include_router(gateway.get_router(), prefix="/graphql")
+    await adapter.connect()
+    # 2. Introspects DB and builds the Schema
+    schema = await schema_builder.build_schema()
+    
+    # 3. Mount the GraphQL Router
+    graphql_router = make_graphql_router(schema)
+    app.include_router(graphql_router, prefix="/graphql")
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
 ```
 
-!!! tip "Database Configuration"
-    Make sure to replace `postgresql://postgres:password@localhost:5432/my_database` with your actual database connection string.
+### Database Adapters
+
+Choose your underlying database engine and instantiate the correct adapter:
+
+=== "PostgreSQL"
+    ```python
+    from db_graphql_gateway.database.adapters.postgres.adapter import PostgresAdapter
+
+    def get_my_adapter():
+        return PostgresAdapter(dsn="postgresql://postgres:password@localhost:5432/my_database")
+    ```
+
+=== "SQLite"
+    ```python
+    from db_graphql_gateway.database.adapters.sqlite.adapter import SQLiteAdapter
+
+    def get_my_adapter():
+        return SQLiteAdapter(path="my_database.sqlite")
+    ```
+
+=== "MySQL / MariaDB"
+    ```python
+    from db_graphql_gateway.database.adapters.mysql.adapter import MySQLAdapter
+
+    def get_my_adapter():
+        return MySQLAdapter(
+            host="127.0.0.1",
+            port=3306,
+            user="root",
+            password="password",
+            database="my_database"
+        )
+    ```
 
 ---
 
@@ -144,10 +156,11 @@ You can use the built-in CLI for various administrative and CI tasks directly fr
 
 ```bash
 # Check if the database connection and schema are healthy
-sgql doctor postgresql://user:pass@localhost:5432/db
+# Use the correct DSN prefix (postgresql://, sqlite:///, mysql://) for your adapter
+sgql doctor --dsn postgresql://user:pass@localhost:5432/db
 
 # Audit your schema for security flaws (depth limits, complexity, masked errors)
-sgql security postgresql://user:pass@localhost:5432/db
+sgql security --config sgql.yaml
 
 # Validate your GatewayConfig overrides (sgql.yaml)
 sgql validate --config sgql.yaml

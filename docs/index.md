@@ -1,91 +1,133 @@
-<div align="center" style="margin-top: 4rem; margin-bottom: 2rem;">
-  <h1 style="font-size: 3rem; margin-bottom: 0.5rem; letter-spacing: -0.04em;">db-graphql-gateway</h1>
-  <p style="font-size: 1.25rem; color: var(--md-text-color); max-width: 600px; margin: 0 auto;">
-    Generate secure, production-ready GraphQL APIs directly from your PostgreSQL database schema with O(1) batching and row-level authorization.
-  </p>
-  <div style="margin-top: 1.5rem; display: flex; gap: 10px; justify-content: center;">
-    <a href="quickstart/"><button class="md-button md-button--primary">Get Started</button></a>
-    <a href="https://github.com/db-graphql-gateway/db-graphql-gateway"><button class="md-button">View on GitHub</button></a>
-  </div>
-</div>
-
+---
+hide:
+  - navigation
 ---
 
-`db-graphql-gateway` (CLI: `sgql`) is a powerful introspection and execution engine. It inspects your database schema, constructs an Intermediate Representation (IR), and statically generates a highly optimized **Strawberry GraphQL** schema.
+# db-graphql-gateway
 
-Built for modern enterprise architectures, it features robust security constraints, row-level authorization, and strict $O(1)$ batching to eliminate N+1 query problems.
+A production-grade, reusable Python package that automatically generates a secure, optimized GraphQL API directly from your database connection. 
 
-## ✨ Core Features
+It acts as a bridge between your database and GraphQL, translating GraphQL queries into efficient, parameterized SQL without requiring you to manually write resolvers, define schemas, or worry about the typical pitfalls of database-to-API integrations.
+
+---
 
 <div class="grid cards" markdown>
 
--   :material-database-search: **Intelligent Schema Introspection**
-
+-   :material-database: **No ORM Required**
     ---
+    The database itself is the source of truth. You don't need to define models in SQLAlchemy, SQLModel, Django, or Prisma just to get a GraphQL API.
 
-    Automatically discovers tables, views, primary keys, foreign keys, and enums directly from PostgreSQL system catalogs.
-
--   :material-rocket-launch: **O(1) DataLoader Batching**
-
+-   :material-security: **Security First**
     ---
+    Authentication and Authorization are treated as separate concerns. Authorization is implemented as **SQL predicates**, meaning data filtering happens deep at the database engine level.
 
-    N+1 query problem solved by default. Relationship fields use Strawberry DataLoaders that compile grouped SQL queries (e.g., `WHERE id IN ($1, $2)`), keeping your API blazing fast.
-
--   :material-shield-lock: **Comprehensive Security & Auth**
-
+-   :material-rocket-launch: **N+1 Prevention Guarantee**
     ---
+    A sophisticated, request-scoped DataLoader pattern is wired up automatically. Combined with integrated authorization predicates, it guarantees **O(1) database queries per relationship depth**.
 
-    Row-Level Authorization transpiled directly into SQL `WHERE` clauses. AST DoS protection with hard limits on query depth, complexity budgets, and aliases.
-
--   :material-filter-variant: **Filtering, Sorting & Pagination**
-
+-   :material-shield-check: **Zero Raw SQL Exposure**
     ---
-
-    Relay-compliant cursor pagination, deeply nested relationship filtering, and multi-column sorting generated out of the box.
-
--   :material-history: **Optimistic Concurrency & Soft Deletes**
-
-    ---
-
-    Built-in support for `version` column optimistic locking and automatic `deleted_at` soft-delete filtering.
-
--   :material-api: **FastAPI Integration**
-
-    ---
-
-    Decoupled helpers to easily mount the Gateway on FastAPI with pluggable `AuthContext` injection.
+    Clients never provide SQL fragments. All filters, sorting rules, and pagination constraints are strictly typed GraphQL arguments, protecting you from SQL injection.
 
 </div>
 
 ---
 
-## 📖 Documentation Directory
+## 🏗 Architecture Highlights
 
-<div class="grid cards" markdown>
+The system is decoupled into three primary layers, giving you total control before the schema is ever exposed to the client.
 
--   [**Quickstart**](quickstart.md)
-    ---
-    Get a FastAPI GraphQL server running in 2 minutes.
-
--   [**Architecture**](ARCHITECTURE.md)
-    ---
-    Deep dive into the Internal Representation, Planning, and Execution pipelines.
-
--   [**Security**](SECURITY.md)
-    ---
-    How the Gateway transpiles authorization into SQL and protects against DoS attacks.
-
--   [**Benchmarks**](BENCHMARKS.md)
-    ---
-    N+1 query elimination and $O(1)$ relationship scaling.
-
--   [**FAQ**](FAQ.md)
-    ---
-    Common questions regarding design, ORMs, and integrations.
-
-</div>
+1. **Introspection**: Connects to PostgreSQL, MySQL, or SQLite and introspects tables, columns, primary keys, foreign keys, and views.
+2. **Intermediate Representation (IR)**: Converts the raw DB schema into a database-agnostic IR. This is where your YAML configurations (`sgql.yaml`) override names or hide sensitive fields.
+3. **GraphQL Generation**: The IR dynamically builds a fully-typed Strawberry GraphQL schema.
+4. **Query Execution**: ASTs are parsed, authorization policies are merged, and highly optimized SQL (`EXISTS`, `JOIN`, `IN`) is generated to fulfill the request.
 
 ---
 
-!!! tip "Why not just use an ORM?"
-    The Gateway bypasses traditional ORMs to execute dynamic, statically-typed batch queries tailored perfectly to the exact AST requested by the GraphQL client, ensuring minimal memory overhead and zero redundant database hits.
+## ⚡ Quick Example
+
+Here is a quick example of how you can instantiate the gateway and execute a query securely:
+
+=== "Python Application"
+
+    ```python
+    import asyncio
+    from db_graphql_gateway.database.adapters.postgres.adapter import PostgresAdapter
+    from db_graphql_gateway.schema.config import GatewayConfig
+    from db_graphql_gateway.graphql.builder import GraphQLSchemaBuilder
+    from db_graphql_gateway.auth.authorization import AuthorizationEngine
+
+    async def main():
+        # 1. Connect to your database
+        adapter = PostgresAdapter(dsn="postgresql://user:password@localhost:5432/my_db")
+        await adapter.connect()
+
+        # 2. Configure the gateway
+        config = GatewayConfig()
+        auth_engine = AuthorizationEngine()
+
+        # 3. Build the GraphQL schema dynamically
+        schema_builder = GraphQLSchemaBuilder(adapter, config, auth_engine)
+        schema = await schema_builder.build_schema()
+
+        # 4. Execute a GraphQL query
+        query = """
+        query {
+          users(first: 10, filter: { isActive: { eq: true } }) {
+            edges {
+              node {
+                id
+                username
+                posts {
+                  title
+                }
+              }
+            }
+          }
+        }
+        """
+        result = await schema.execute(query)
+        print(result.data)
+
+        await adapter.close()
+
+    if __name__ == "__main__":
+        asyncio.run(main())
+    ```
+
+=== "GraphQL Output"
+
+    ```json
+    {
+      "data": {
+        "users": {
+          "edges": [
+            {
+              "node": {
+                "id": "1",
+                "username": "alice",
+                "posts": [
+                  { "title": "My first post" },
+                  { "title": "GraphQL is awesome" }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+    ```
+
+---
+
+## 🔒 Security & Hardening
+
+Out of the box, `db-graphql-gateway` provides robust security controls:
+
+!!! abstract "Built-in Defenses"
+    - **Complexity Budgets**: Rejects wildly nested or computationally expensive queries.
+    - **Depth & Alias Limits**: Prevents denial-of-service via query expansion.
+    - **Tenant-Level Policies**: Row-level security translated to SQL `WHERE` clauses.
+    - **Masking & Safety**: Production introspection lockdown and sensitive-field protection by default.
+
+Whether you're building a massive multi-tenant SaaS or just want to quickly expose a read-only dashboard over a SQLite file, `db-graphql-gateway` is designed to be the most reliable, decoupled, and performant bridge available in Python.

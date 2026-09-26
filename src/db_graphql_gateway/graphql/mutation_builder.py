@@ -7,7 +7,7 @@ from db_graphql_gateway.schema.ir.models import GraphQLTypeIR
 def create_mutation_input_types(
     ir_type: GraphQLTypeIR,
     map_scalar_fn: Callable[[str], Type[Any]],
-) -> tuple[type, type]:
+) -> tuple[type | None, type | None]:
     # 1. CreateInput type
     create_annotations: dict[str, Any] = {}
     create_dict: dict[str, Any] = {}
@@ -22,6 +22,9 @@ def create_mutation_input_types(
             create_dict[field.name] = None
         else:
             create_annotations[field.name] = python_type
+
+    if not create_annotations:
+        return None, None
 
     create_dict["__annotations__"] = create_annotations
     create_cls = type(f"Create{ir_type.name}Input", (), create_dict)

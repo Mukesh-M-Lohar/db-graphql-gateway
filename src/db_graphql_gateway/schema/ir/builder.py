@@ -71,6 +71,8 @@ class IRBuilder:
                     type_ir.fields.append(field_ir)
 
                 types_map[table_name] = type_ir
+                if not any(f.is_primary_key for f in type_ir.fields):
+                    type_ir.is_read_only = True
 
             for view_name, view in namespace.views.items():
                 view_config = config.tables.get(view_name)

@@ -42,6 +42,12 @@ dev = [
     "pre-commit",
     "testcontainers[postgres]>=4.4.1",
 ]
+sqlite = [
+    "aiosqlite>=0.22.1",
+]
+mysql = [
+    "asyncmy>=0.2.14",
+]
 
 [project.scripts]
 sgql = "db_graphql_gateway.cli.main:cli"
@@ -74,9 +80,13 @@ testpaths = ["tests"]
 
 [dependency-groups]
 dev = [
+    "aiosqlite>=0.22.1",
+    "asyncmy>=0.2.14",
     "mkdocs>=1.6.1",
     "mkdocs-material>=9.7.7",
     "pre-commit>=4.6.2",
+    "sqlalchemy>=2.0.52",
+    "types-pyyaml>=6.0.12.20260815",
 ]
 
 [[tool.mypy.overrides]]

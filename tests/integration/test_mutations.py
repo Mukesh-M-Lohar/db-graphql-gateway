@@ -82,6 +82,7 @@ async def test_mutations_create_update_delete_flow(pg_adapter_mutation_data: Any
     """
     res_create = await schema.execute(create_mutation, context_value=user_a_ctx)
     assert res_create.errors is None, f"Create mutation errors: {res_create.errors}"
+    assert res_create.data is not None
     task = res_create.data["create_tasks"]
     task_id = task["id"]
     assert task["title"] == "Task 1"
@@ -98,6 +99,7 @@ async def test_mutations_create_update_delete_flow(pg_adapter_mutation_data: Any
     """
     res_update_b = await schema.execute(update_mutation, context_value=user_b_ctx)
     assert res_update_b.errors is None
+    assert res_update_b.data is not None
     assert res_update_b.data["update_tasks"] is None
 
     # 3. User A UPDATES their own task -> Success
@@ -111,6 +113,7 @@ async def test_mutations_create_update_delete_flow(pg_adapter_mutation_data: Any
     """
     res_update_a = await schema.execute(update_mutation_a, context_value=user_a_ctx)
     assert res_update_a.errors is None
+    assert res_update_a.data is not None
     assert res_update_a.data["update_tasks"]["title"] == "Updated Title"
 
     # 4. User B attempts to DELETE User A's task -> Should be DENIED (returns null)
@@ -123,17 +126,19 @@ async def test_mutations_create_update_delete_flow(pg_adapter_mutation_data: Any
     """
     res_delete_b = await schema.execute(delete_mutation, context_value=user_b_ctx)
     assert res_delete_b.errors is None
+    assert res_delete_b.data is not None
     assert res_delete_b.data["delete_tasks"] is None
 
     # 5. User A DELETES their own task -> Success
     res_delete_a = await schema.execute(delete_mutation, context_value=user_a_ctx)
     assert res_delete_a.errors is None
+    assert res_delete_a.data is not None
     assert res_delete_a.data["delete_tasks"]["id"] == task_id
 
     # 6. Verify Read-Only Views have NO mutations generated
     mutation_type = schema.mutation
     assert mutation_type is not None
-    mutation_fields = mutation_type.__strawberry_definition__.fields
+    mutation_fields = mutation_type.__strawberry_definition__.fields  # type: ignore[attr-defined]
     field_names = [f.python_name for f in mutation_fields if f.python_name]
     assert not any(
         "active_tasks_view" in fn for fn in field_names

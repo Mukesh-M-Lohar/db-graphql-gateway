@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Any, Type, Optional
 
 import strawberry
+import strawberry.annotation
 from strawberry.types import Info
 from strawberry.schema.config import StrawberryConfig
 from strawberry.types.field import StrawberryField
@@ -58,6 +59,8 @@ class GraphQLSchemaBuilder:
         self.auth_engine = auth_engine
         self.generated_types: dict[str, type] = {}
         self.generated_enums: dict[str, type] = {}
+        # Populated in build(); maps GraphQL type name → source schema name
+        self._schema_map: dict[str, str] = {}
 
     def map_scalar_type(self, type_name: str) -> Type[Any]:
         if type_name in self.generated_enums:
@@ -81,9 +84,6 @@ class GraphQLSchemaBuilder:
             import typing
 
             return typing.cast(Type[Any], strawberry.scalars.JSON)
-            import uuid
-
-            return uuid.UUID
         # Fallback to string for varchar, text, enums, etc.
         return str
 
@@ -107,6 +107,7 @@ class GraphQLSchemaBuilder:
                 )
                 registry = DataLoaderRegistry(
                     self.db_adapter,
+                    schema_map=self._schema_map,
                     auth_engine=self.auth_engine,
                     auth_ctx=auth_ctx,
                 )
@@ -198,6 +199,7 @@ class GraphQLSchemaBuilder:
                 )
                 info.context["dataloader_registry"] = DataLoaderRegistry(
                     self.db_adapter,
+                    schema_map=self._schema_map,
                     auth_engine=self.auth_engine,
                     auth_ctx=auth_ctx_list,
                 )
@@ -256,6 +258,7 @@ class GraphQLSchemaBuilder:
                 )
                 info.context["dataloader_registry"] = DataLoaderRegistry(
                     self.db_adapter,
+                    schema_map=self._schema_map,
                     auth_engine=self.auth_engine,
                     auth_ctx=auth_ctx_conn,
                 )
@@ -297,25 +300,27 @@ class GraphQLSchemaBuilder:
             for idx, row in enumerate(data_rows):
                 node_obj = return_type(**row)
                 cursor_str = encode_cursor(current_offset + idx + 1)
-                edges.append(Edge(node=node_obj, cursor=cursor_str))  # type: ignore[call-arg]
+                edges.append(Edge(node=node_obj, cursor=cursor_str))
 
             start_cursor = edges[0].cursor if edges else None
             end_cursor = edges[-1].cursor if edges else None
 
-            page_info = PageInfo(  # type: ignore[call-arg]
+            page_info = PageInfo(
                 has_next_page=has_next_page,
                 has_previous_page=current_offset > 0,
                 start_cursor=start_cursor,
                 end_cursor=end_cursor,
             )
 
-            return Connection(edges=edges, page_info=page_info)  # type: ignore[call-arg]
+            return Connection(edges=edges, page_info=page_info)
 
         return resolver
 
     def _create_create_mutation_resolver(
         self, ir_type: GraphQLTypeIR, return_type: type
     ) -> Callable[..., Awaitable[Any]]:
+        pk_cols = [f.name for f in ir_type.fields if f.is_primary_key] or ["id"]
+
         async def resolver(info: Info, input: Any) -> Any:
             data = {k: v for k, v in vars(input).items() if v is not None}
 
@@ -324,6 +329,7 @@ class GraphQLSchemaBuilder:
                 operation="insert",
                 table=TableRef(schema=ir_type.source_table.schema, name=ir_type.source_table.name),
                 data=data,
+                pk_columns=pk_cols,
             )
             compiler = self.db_adapter.compiler()
             compiled_query = compiler.compile_mutation(plan)
@@ -338,7 +344,7 @@ class GraphQLSchemaBuilder:
     def _create_update_mutation_resolver(
         self, ir_type: GraphQLTypeIR, return_type: type
     ) -> Callable[..., Awaitable[Any]]:
-        pk_col = next((f.name for f in ir_type.fields if f.is_primary_key), "id")
+        pk_cols = [f.name for f in ir_type.fields if f.is_primary_key] or ["id"]
         has_version = any(f.name == "version" for f in ir_type.fields)
 
         async def resolver(
@@ -362,12 +368,17 @@ class GraphQLSchemaBuilder:
                 # No fields to update -> fetch current record
                 return None
 
+            if len(pk_cols) > 1:
+                pk_values = [id[c] for c in pk_cols]
+            else:
+                pk_values = [id]
+
             plan = MutationPlan(
                 operation="update",
                 table=TableRef(schema=ir_type.source_table.schema, name=ir_type.source_table.name),
                 data=data,
-                pk_column=pk_col,
-                pk_value=id,
+                pk_columns=pk_cols,
+                pk_values=pk_values,
                 filter_tree=auth_filter,
             )
             compiler = self.db_adapter.compiler()
@@ -389,7 +400,7 @@ class GraphQLSchemaBuilder:
     def _create_delete_mutation_resolver(
         self, ir_type: GraphQLTypeIR, return_type: type
     ) -> Callable[..., Awaitable[Any]]:
-        pk_col = next((f.name for f in ir_type.fields if f.is_primary_key), "id")
+        pk_cols = [f.name for f in ir_type.fields if f.is_primary_key] or ["id"]
         has_deleted_at = any(f.name == "deleted_at" for f in ir_type.fields)
 
         async def resolver(info: Info, id: Any) -> Any:
@@ -402,6 +413,11 @@ class GraphQLSchemaBuilder:
 
             from datetime import datetime, timezone
 
+            if len(pk_cols) > 1:
+                pk_values = [id[c] for c in pk_cols]
+            else:
+                pk_values = [id]
+
             if has_deleted_at:
                 plan = MutationPlan(
                     operation="update",
@@ -409,8 +425,8 @@ class GraphQLSchemaBuilder:
                         schema=ir_type.source_table.schema, name=ir_type.source_table.name
                     ),
                     data={"deleted_at": datetime.now(timezone.utc)},
-                    pk_column=pk_col,
-                    pk_value=id,
+                    pk_columns=pk_cols,
+                    pk_values=pk_values,
                     filter_tree=auth_filter,
                 )
             else:
@@ -419,8 +435,8 @@ class GraphQLSchemaBuilder:
                     table=TableRef(
                         schema=ir_type.source_table.schema, name=ir_type.source_table.name
                     ),
-                    pk_column=pk_col,
-                    pk_value=id,
+                    pk_columns=pk_cols,
+                    pk_values=pk_values,
                     filter_tree=auth_filter,
                 )
 
@@ -440,6 +456,9 @@ class GraphQLSchemaBuilder:
         db_schema: DatabaseSchema | None = None,
         extensions: list[Any] | None = None,
     ) -> strawberry.Schema:
+        # Build schema_map for DataLoader so it never hardcodes a schema name
+        self._schema_map = {ir.name: ir.source_table.schema for ir in ir_types}
+
         if db_schema:
             self._build_enums(db_schema)
 
@@ -498,39 +517,46 @@ class GraphQLSchemaBuilder:
             query_annotations[connection_query_name] = conn_type
             query_namespace[connection_query_name] = strawberry.field(resolver=conn_resolver_fn)
 
-            # Build Mutations ONLY for non-views
-            if not ir_type.is_view:
+            # Build Mutations ONLY for non-views and non-read-only tables
+            if not ir_type.is_view and not ir_type.is_read_only:
                 create_input_type, update_input_type = create_mutation_input_types(
                     ir_type, self.map_scalar_type
                 )
-                pk_field = next((f for f in ir_type.fields if f.is_primary_key), None)
-                pk_type = self.map_scalar_type(pk_field.graphql_type) if pk_field else int
+                pk_fields = [f for f in ir_type.fields if f.is_primary_key]
+                if len(pk_fields) > 1:
+                    import typing
 
-                # Create mutation: create_<type>(input: ...)
-                create_name = f"create_{ir_type.name.lower()}"
-                create_fn = self._create_create_mutation_resolver(ir_type, sb_type)
-                create_fn.__annotations__ = {
-                    "info": Info,
-                    "input": create_input_type,
-                    "return": Optional[sb_type],
-                }
-                mutation_annotations[create_name] = Optional[sb_type]
-                mutation_namespace[create_name] = strawberry.mutation(resolver=create_fn)
+                    pk_type = typing.cast(Type[Any], strawberry.scalars.JSON)
+                else:
+                    pk_type = self.map_scalar_type(pk_fields[0].graphql_type) if pk_fields else int
 
-                # Update mutation: update_<type>(id: ..., input: ...)
-                update_name = f"update_{ir_type.name.lower()}"
-                update_fn = self._create_update_mutation_resolver(ir_type, sb_type)
-                update_annotations = {
-                    "info": Info,
-                    "id": pk_type,
-                    "input": update_input_type,
-                    "expected_version": Optional[int],
-                    "return": Optional[sb_type],
-                }
+                if create_input_type is not None:
+                    # Create mutation: create_<type>(input: ...)
+                    create_name = f"create_{ir_type.name.lower()}"
+                    create_fn = self._create_create_mutation_resolver(ir_type, sb_type)
+                    create_fn.__annotations__ = {
+                        "info": Info,
+                        "input": create_input_type,
+                        "return": Optional[sb_type],
+                    }
+                    mutation_annotations[create_name] = Optional[sb_type]
+                    mutation_namespace[create_name] = strawberry.mutation(resolver=create_fn)
 
-                update_fn.__annotations__ = update_annotations
-                mutation_annotations[update_name] = Optional[sb_type]
-                mutation_namespace[update_name] = strawberry.mutation(resolver=update_fn)
+                if update_input_type is not None:
+                    # Update mutation: update_<type>(id: ..., input: ...)
+                    update_name = f"update_{ir_type.name.lower()}"
+                    update_fn = self._create_update_mutation_resolver(ir_type, sb_type)
+                    update_annotations = {
+                        "info": Info,
+                        "id": pk_type,
+                        "input": update_input_type,
+                        "expected_version": Optional[int],
+                        "return": Optional[sb_type],
+                    }
+
+                    update_fn.__annotations__ = update_annotations
+                    mutation_annotations[update_name] = Optional[sb_type]
+                    mutation_namespace[update_name] = strawberry.mutation(resolver=update_fn)
 
                 # Delete mutation: delete_<type>(id: ...)
                 delete_name = f"delete_{ir_type.name.lower()}"

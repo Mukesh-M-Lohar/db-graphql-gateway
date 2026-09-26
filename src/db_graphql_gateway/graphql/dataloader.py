@@ -1,5 +1,16 @@
+"""Request-scoped DataLoader registry for relationship batching.
+
+Eliminates N+1 queries by batching foreign-key lookups across all resolvers
+that execute within the same GraphQL request.
+
+The ``schema_map`` parameter (``{type_name: schema_name}``) is built by
+``GraphQLSchemaBuilder`` from the IR and injected here so the DataLoader
+never hardcodes a dialect-specific default schema name (e.g. ``"public"``).
+"""
+
 from collections import defaultdict
 from typing import Any
+
 from strawberry.dataloader import DataLoader
 
 from db_graphql_gateway.auth.authorization import AuthorizationEngine
@@ -29,10 +40,13 @@ class DataLoaderRegistry:
     def __init__(
         self,
         db_adapter: DatabaseAdapter,
+        schema_map: dict[str, str],
         auth_engine: AuthorizationEngine | None = None,
         auth_ctx: AuthContext | None = None,
     ) -> None:
         self.db_adapter = db_adapter
+        # Maps GraphQL type name → source schema name (e.g. "public", "main")
+        self.schema_map = schema_map
         self.auth_engine = auth_engine
         self.auth_ctx = auth_ctx
         self.loaders: dict[str, DataLoader[Any, Any]] = {}
@@ -47,13 +61,17 @@ class DataLoaderRegistry:
         async def batch_load_fn(keys: list[Any]) -> list[Any]:
             target_col = rel.join.target_columns[0]
 
+            # Resolve schema from IR map; fall back to "public" for Postgres
+            # compatibility if the map is somehow missing the target type.
+            target_schema = self.schema_map.get(rel.target_type, "public")
+
             # Build authorization filter for the target table
             auth_filter: FilterGroup | FilterCondition | None = None
             if self.auth_engine:
                 auth_filter = self.auth_engine.get_read_filter(rel.target_type, self.auth_ctx)
 
             plan = QueryPlan(
-                table=TableRef(schema="public", name=rel.target_type),
+                table=TableRef(schema=target_schema, name=rel.target_type),
                 batch_column=target_col,
                 batch_values=list(keys),
                 filter_tree=auth_filter,

@@ -92,7 +92,7 @@ async def test_relationship_dataloader_batching(pg_adapter_rel_data: Any) -> Non
     pg_adapter_rel_data.execute = tracking_execute
 
     # 4. Execute nested 1:N relationship query fetching authors and their posts with request-scoped context
-    context = {"dataloader_registry": DataLoaderRegistry(pg_adapter_rel_data)}
+    context = {"dataloader_registry": DataLoaderRegistry(pg_adapter_rel_data, {})}
     query = """
     query {
         authorss {

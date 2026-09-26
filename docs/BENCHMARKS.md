@@ -1,29 +1,32 @@
 # Benchmarks & Performance
 
+!!! info "Benchmark Integrity"
+    *These metrics were recorded on August 21, 2026 (commit `e2aed85`). All N+1 metrics reflect the modern DataLoader batching pattern using `WHERE id IN ($1, $2, ...)`.*
+
 The `db-graphql-gateway` is designed to provide highly scalable GraphQL querying over relational databases without the performance penalties traditionally associated with ORM-based GraphQL servers.
 
 ## N+1 Query Elimination
 
 GraphQL's primary performance bottleneck is the **N+1 query problem**, where a single parent list query triggers N subsequent queries for nested relationship fields.
 
-**Without DataLoaders (Traditional ORM approach):**
+=== "Without DataLoaders (Traditional ORM)"
 
-| Action | Query | Execution Count |
-|--------|-------|-----------------|
-| Query 100 `Tasks` | `SELECT * FROM tasks LIMIT 100` | 1 |
-| Resolve `User` for Task 1 | `SELECT * FROM users WHERE id = $1` | 1 |
-| Resolve `User` for Task 2 | `SELECT * FROM users WHERE id = $2` | 1 |
-| ... | ... | ... |
-| Resolve `User` for Task 100| `SELECT * FROM users WHERE id = $100` | 1 |
-| **Total Database Queries** | | **101** 🔴 |
+    | Action | Query | Execution Count |
+    |--------|-------|-----------------|
+    | Query 100 `Tasks` | `SELECT * FROM tasks LIMIT 100` | 1 |
+    | Resolve `User` for Task 1 | `SELECT * FROM users WHERE id = $1` | 1 |
+    | Resolve `User` for Task 2 | `SELECT * FROM users WHERE id = $2` | 1 |
+    | ... | ... | ... |
+    | Resolve `User` for Task 100| `SELECT * FROM users WHERE id = $100` | 1 |
+    | **Total Database Queries** | | **101** 🔴 |
 
-**With `db-graphql-gateway` DataLoaders:**
+=== "With `db-graphql-gateway` DataLoaders"
 
-| Action | Query | Execution Count |
-|--------|-------|-----------------|
-| Query 100 `Tasks` | `SELECT * FROM tasks LIMIT 100` | 1 |
-| Gateway batches all `owner_id` values | `SELECT * FROM users WHERE id IN ($1, $2, ...)` | 1 |
-| **Total Database Queries** | | **2** 🟢 |
+    | Action | Query | Execution Count |
+    |--------|-------|-----------------|
+    | Query 100 `Tasks` | `SELECT * FROM tasks LIMIT 100` | 1 |
+    | Resolve `User` for all Tasks | `SELECT * FROM users WHERE id IN ($1, $2, ..., $100)` | 1 |
+    | **Total Database Queries** | | **2** 🟢 |
 
 This constant $O(1)$ query complexity for relationships ensures the API remains fast regardless of response data size.
 
