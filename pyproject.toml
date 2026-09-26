@@ -105,3 +105,10 @@ dev = [
 module = "tests.*"
 disallow_untyped_decorators = false
 disallow_untyped_defs = false
+
+[project.urls]
+Homepage = "https://github.com/Mukesh-M-Lohar/db-graphql-gateway"
+Documentation = "https://Mukesh-M-Lohar.github.io/db-graphql-gateway/"
+Repository = "https://github.com/Mukesh-M-Lohar/db-graphql-gateway.git"
+Issues = "https://github.com/Mukesh-M-Lohar/db-graphql-gateway/issues"
+
