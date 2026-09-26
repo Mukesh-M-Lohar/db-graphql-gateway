@@ -65,7 +65,7 @@ async def test_filtering_and_sorting(pg_adapter_with_data: Any) -> None:
     # Test filtering with eq & ordering
     query_eq = """
     query {
-        productss(where: { in_stock: { eq: true } }, order_by: [{ price: DESC }]) {
+        products(where: { in_stock: { eq: true } }, order_by: [{ price: DESC }]) {
             id
             name
             price
@@ -76,7 +76,7 @@ async def test_filtering_and_sorting(pg_adapter_with_data: Any) -> None:
     res = await schema.execute(query_eq)
     assert res.errors is None, f"Query errors: {res.errors}"
     assert res.data is not None
-    products = (res.data or {})["productss"]
+    products = (res.data or {})["products"]
     assert len(products) == 3
     assert products[0]["name"] == "Laptop"
     assert products[1]["name"] == "Keyboard"
@@ -85,7 +85,7 @@ async def test_filtering_and_sorting(pg_adapter_with_data: Any) -> None:
     # Test gt filter
     query_gt = """
     query {
-        productss(where: { price: { gt: 50.0 } }) {
+        products(where: { price: { gt: 50.0 } }) {
             name
             price
         }
@@ -94,12 +94,12 @@ async def test_filtering_and_sorting(pg_adapter_with_data: Any) -> None:
     res_gt = await schema.execute(query_gt)
     assert res_gt.errors is None
     assert res_gt.data is not None
-    assert len(res_gt.data["productss"]) == 2
+    assert len(res_gt.data["products"]) == 2
 
     # Test ilike filter
     query_ilike = """
     query {
-        productss(where: { name: { ilike: "%mo%" } }) {
+        products(where: { name: { ilike: "%mo%" } }) {
             name
         }
     }
@@ -107,7 +107,7 @@ async def test_filtering_and_sorting(pg_adapter_with_data: Any) -> None:
     res_ilike = await schema.execute(query_ilike)
     assert res_ilike.errors is None
     assert res_ilike.data is not None
-    names = [p["name"] for p in res_ilike.data["productss"]]
+    names = [p["name"] for p in res_ilike.data["products"]]
     assert "Mouse" in names
     assert "Monitor" in names
 
@@ -127,7 +127,7 @@ async def test_pagination_and_max_page_size(pg_adapter_with_data: Any) -> None:
     # Offset & limit capped by max_page_size=2
     query_list = """
     query {
-        productss(limit: 10, offset: 1, order_by: [{ id: ASC }]) {
+        products(limit: 10, offset: 1, order_by: [{ id: ASC }]) {
             id
             name
         }
@@ -136,14 +136,14 @@ async def test_pagination_and_max_page_size(pg_adapter_with_data: Any) -> None:
     res = await schema.execute(query_list)
     assert res.errors is None, f"Query errors: {res.errors}"
     # Capped at max_page_size=2
-    assert len((res.data or {})["productss"]) == 2
-    assert (res.data or {})["productss"][0]["name"] == "Mouse"
-    assert (res.data or {})["productss"][1]["name"] == "Monitor"
+    assert len((res.data or {})["products"]) == 2
+    assert (res.data or {})["products"][0]["name"] == "Mouse"
+    assert (res.data or {})["products"][1]["name"] == "Monitor"
 
     # Cursor-based Relay Connection pagination
     query_conn_1 = """
     query {
-        productss_connection(first: 2, order_by: [{ id: ASC }]) {
+        products_connection(first: 2, order_by: [{ id: ASC }]) {
             edges {
                 node {
                     name
@@ -162,7 +162,7 @@ async def test_pagination_and_max_page_size(pg_adapter_with_data: Any) -> None:
     res_conn_1 = await schema.execute(query_conn_1)
     assert res_conn_1.errors is None, f"Query errors: {res_conn_1.errors}"
     assert res_conn_1.data is not None
-    conn_data = res_conn_1.data["productss_connection"]
+    conn_data = res_conn_1.data["products_connection"]
     assert len(conn_data["edges"]) == 2
     assert conn_data["edges"][0]["node"]["name"] == "Keyboard"
     assert conn_data["edges"][1]["node"]["name"] == "Mouse"
@@ -174,7 +174,7 @@ async def test_pagination_and_max_page_size(pg_adapter_with_data: Any) -> None:
     # Fetch next page using after cursor (after 2 items -> offset 2)
     query_conn_2 = f"""
     query {{
-        productss_connection(first: 2, after: "{end_cursor}", order_by: [{{ id: ASC }}]) {{
+        products_connection(first: 2, after: "{end_cursor}", order_by: [{{ id: ASC }}]) {{
             edges {{
                 node {{
                     name
@@ -191,7 +191,7 @@ async def test_pagination_and_max_page_size(pg_adapter_with_data: Any) -> None:
     res_conn_2 = await schema.execute(query_conn_2)
     assert res_conn_2.errors is None, f"Query errors: {res_conn_2.errors}"
     assert res_conn_2.data is not None
-    conn_data_2 = res_conn_2.data["productss_connection"]
+    conn_data_2 = res_conn_2.data["products_connection"]
     assert len(conn_data_2["edges"]) == 2
     assert conn_data_2["edges"][0]["node"]["name"] == "Monitor"
     assert conn_data_2["edges"][1]["node"]["name"] == "Laptop"
