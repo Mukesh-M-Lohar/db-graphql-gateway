@@ -6,9 +6,17 @@ This guide will walk you through spinning up a full FastAPI GraphQL server over 
 
 Install the Gateway along with `fastapi` and an ASGI server:
 
-```bash
-uv add "db-graphql-gateway[fastapi]" uvicorn
-```
+=== "pip"
+
+    ```bash
+    pip install "db-graphql-gateway[fastapi]" uvicorn
+    ```
+
+=== "uv"
+
+    ```bash
+    uv add "db-graphql-gateway[fastapi]" uvicorn
+    ```
 
 ## 2. Server Example
 

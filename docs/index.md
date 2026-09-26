@@ -11,6 +11,24 @@ It acts as a bridge between your database and GraphQL, translating GraphQL queri
 
 ---
 
+## 📦 Installation
+
+Available on PyPI. Install via `pip` or `uv`:
+
+=== "pip"
+
+    ```bash
+    pip install "db-graphql-gateway[fastapi]"
+    ```
+
+=== "uv"
+
+    ```bash
+    uv add "db-graphql-gateway[fastapi]"
+    ```
+
+---
+
 <div class="grid cards" markdown>
 
 -   :material-database: **No ORM Required**
