@@ -49,5 +49,18 @@ CREATE TABLE post_tags (
     PRIMARY KEY (post_id, tag_id)
 );
 
+CREATE TABLE audit_logs (
+    action VARCHAR(255) NOT NULL,
+    user_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE user_roles (
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role_id INT NOT NULL,
+    assigned_by INT,
+    PRIMARY KEY (user_id, role_id)
+);
+
 -- Reset pg_stat_statements
 SELECT pg_stat_statements_reset();
