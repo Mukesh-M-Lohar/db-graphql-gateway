@@ -362,7 +362,8 @@ class GraphQLSchemaBuilder:
 
             result = await self.db_adapter.execute(compiled_query)
             if not result.data:
-                return None
+                # Fallback for adapters (like MySQL) that cannot fetch composite PK inserts
+                return return_type(**data)
             return return_type(**result.data[0])
 
         return resolver
