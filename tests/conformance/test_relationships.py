@@ -16,9 +16,9 @@ async def test_relationship_dataloader(gql_schema: tuple[Any, Any], run_sql: Any
 
     query = """
     query {
-        authorss(order_by: { name: DESC }) {
+        authors(order_by: { name: DESC }) {
             name
-            bookss {
+            books {
                 title
             }
         }
@@ -43,14 +43,14 @@ async def test_relationship_dataloader(gql_schema: tuple[Any, Any], run_sql: Any
     assert result.errors is None
     assert result.data is not None
 
-    authors = result.data["authorss"]
+    authors = result.data["authors"]
     assert len(authors) == 2
 
     assert authors[0]["name"] == "Tolkien"
-    assert len(authors[0]["bookss"]) == 2
-    book_titles_1 = {b["title"] for b in authors[0]["bookss"]}
+    assert len(authors[0]["books"]) == 2
+    book_titles_1 = {b["title"] for b in authors[0]["books"]}
     assert book_titles_1 == {"The Hobbit", "LOTR"}
 
     assert authors[1]["name"] == "Asimov"
-    assert len(authors[1]["bookss"]) == 1
-    assert authors[1]["bookss"][0]["title"] == "Foundation"
+    assert len(authors[1]["books"]) == 1
+    assert authors[1]["books"][0]["title"] == "Foundation"

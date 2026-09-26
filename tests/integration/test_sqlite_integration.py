@@ -183,11 +183,11 @@ async def test_soft_delete_filter_applied(sqlite_schema: SQLiteAdapter) -> None:
     await conn.execute("INSERT INTO articles (title, deleted_at) VALUES ('Dead', '2024-01-01')")
     await conn.commit()
 
-    result = await schema.execute("query { articless { id title } }")
+    result = await schema.execute("query { articles { id title } }")
     assert result.errors is None, result.errors
     assert result.data is not None
     assert result.data is not None
-    titles = [r["title"] for r in result.data["articless"]]
+    titles = [r["title"] for r in result.data["articles"]]
     assert "Live" in titles
     assert "Dead" not in titles, "Soft-deleted article must not appear in list"
 

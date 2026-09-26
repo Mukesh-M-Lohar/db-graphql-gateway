@@ -95,10 +95,10 @@ async def test_relationship_dataloader_batching(pg_adapter_rel_data: Any) -> Non
     context = {"dataloader_registry": DataLoaderRegistry(pg_adapter_rel_data, {})}
     query = """
     query {
-        authorss {
+        authors {
             id
             name
-            postss {
+            posts {
                 id
                 title
             }
@@ -111,14 +111,14 @@ async def test_relationship_dataloader_batching(pg_adapter_rel_data: Any) -> Non
     assert res.errors is None, f"Query errors: {res.errors}"
     assert res.data is not None
 
-    authors = res.data["authorss"]
+    authors = res.data["authors"]
     assert len(authors) == 2
 
     alice = next(a for a in authors if a["name"] == "Alice")
     bob = next(a for a in authors if a["name"] == "Bob")
 
-    assert len(alice["postss"]) == 3
-    assert len(bob["postss"]) == 2
+    assert len(alice["posts"]) == 3
+    assert len(bob["posts"]) == 2
 
     # 5. VERIFY Empirical DataLoader Proof:
     # Query 1: SELECT * FROM "public"."authors"
