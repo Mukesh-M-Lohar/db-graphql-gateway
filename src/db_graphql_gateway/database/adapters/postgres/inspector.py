@@ -164,7 +164,7 @@ class PostgresSchemaInspector(SchemaInspector):
                             prefix = src_cols[0].replace("_id", "") if src_cols else "self"
                             rel_name_o2m = f"inverse_{prefix}_{base_name}"
                         else:
-                            rel_name_o2m = f"{base_name}s"
+                            rel_name_o2m = base_name if base_name.endswith("s") else f"{base_name}s"
                         target_table.relationships.append(
                             Relationship(
                                 name=rel_name_o2m,

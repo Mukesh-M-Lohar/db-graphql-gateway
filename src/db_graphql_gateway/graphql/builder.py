@@ -485,7 +485,10 @@ class GraphQLSchemaBuilder:
             order_by_input_type = create_order_by_input_for_type(ir_type)
 
             # List query name
-            list_query_name = f"{ir_type.name.lower()}s"
+            base_name_lower = ir_type.name.lower()
+            list_query_name = (
+                base_name_lower if base_name_lower.endswith("s") else f"{base_name_lower}s"
+            )
 
             list_resolver_fn = self._create_list_resolver(ir_type, sb_type)
             list_resolver_fn.__annotations__ = {
@@ -501,7 +504,7 @@ class GraphQLSchemaBuilder:
             query_namespace[list_query_name] = strawberry.field(resolver=list_resolver_fn)
 
             # Connection query name
-            connection_query_name = f"{ir_type.name.lower()}s_connection"
+            connection_query_name = f"{list_query_name}_connection"
             conn_type = Connection[sb_type]  # type: ignore[valid-type]
 
             conn_resolver_fn = self._create_connection_resolver(ir_type, sb_type)

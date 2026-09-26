@@ -59,11 +59,11 @@ async def test_soft_deletes(gql_schema: tuple[Any, Any], run_sql: Any) -> None:
     )
 
     # 1. List shows both initially
-    list_q = "query { articless { id } }"
+    list_q = "query { articles { id } }"
     res1 = await schema.execute(list_q)
     assert res1.errors is None
     assert res1.data is not None
-    assert len(res1.data["articless"]) == 2
+    assert len(res1.data["articles"]) == 2
 
     # 2. Delete article 1
     del_m = "mutation { delete_articles(id: 1) { id } }"
@@ -81,5 +81,5 @@ async def test_soft_deletes(gql_schema: tuple[Any, Any], run_sql: Any) -> None:
     res3 = await schema.execute(list_q)
     assert res3.errors is None
     assert res3.data is not None
-    assert len(res3.data["articless"]) == 1
-    assert res3.data["articless"][0]["id"] == 2
+    assert len(res3.data["articles"]) == 1
+    assert res3.data["articles"][0]["id"] == 2

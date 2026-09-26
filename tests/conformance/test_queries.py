@@ -12,7 +12,7 @@ async def test_simple_list_query(gql_schema: tuple[Any, Any], run_sql: Any) -> N
 
     query = """
     query {
-        authorss {
+        authors {
             id
             name
         }
@@ -22,9 +22,9 @@ async def test_simple_list_query(gql_schema: tuple[Any, Any], run_sql: Any) -> N
 
     assert result.errors is None
     assert result.data is not None
-    assert len(result.data["authorss"]) == 2
+    assert len(result.data["authors"]) == 2
 
-    names = {author["name"] for author in result.data["authorss"]}
+    names = {author["name"] for author in result.data["authors"]}
     assert names == {"Tolkien", "Asimov"}
 
 
@@ -38,7 +38,7 @@ async def test_filtering_and_pagination(gql_schema: tuple[Any, Any], run_sql: An
 
     query = """
     query {
-        userss(where: { is_active: { eq: true } }, order_by: { name: DESC }, limit: 1) {
+        users(where: { is_active: { eq: true } }, order_by: { name: DESC }, limit: 1) {
             id
             name
             is_active
@@ -49,8 +49,8 @@ async def test_filtering_and_pagination(gql_schema: tuple[Any, Any], run_sql: An
 
     assert result.errors is None
     assert result.data is not None
-    assert len(result.data["userss"]) == 1
+    assert len(result.data["users"]) == 1
 
     # Charlie is active, Alice is active. DESC order means Charlie comes first.
-    assert result.data["userss"][0]["name"] == "Charlie"
-    assert result.data["userss"][0]["is_active"] is True
+    assert result.data["users"][0]["name"] == "Charlie"
+    assert result.data["users"][0]["is_active"] is True

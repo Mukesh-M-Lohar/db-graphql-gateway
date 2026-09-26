@@ -96,10 +96,10 @@ async def gql_schema(sqlite_schema: SQLiteAdapter) -> tuple[Any, SQLiteAdapter]:
 @pytest.mark.asyncio
 async def test_list_query_returns_empty_initially(gql_schema: tuple[Any, SQLiteAdapter]) -> None:
     schema, adapter = gql_schema
-    result = await schema.execute("query { itemss { id name } }")
+    result = await schema.execute("query { items { id name } }")
     assert result.errors is None
     assert result.data is not None
-    assert result.data["itemss"] == []
+    assert result.data["items"] == []
 
 
 @pytest.mark.asyncio
@@ -120,11 +120,11 @@ async def test_create_mutation(gql_schema: tuple[Any, SQLiteAdapter]) -> None:
 async def test_list_after_create(gql_schema: tuple[Any, SQLiteAdapter]) -> None:
     schema, adapter = gql_schema
     await schema.execute('mutation { create_items(input: { name: "Alpha" }) { id } }')
-    result = await schema.execute("query { itemss { id name } }")
+    result = await schema.execute("query { items { id name } }")
     assert result.errors is None
     assert result.data is not None
     assert result.data is not None
-    names = [r["name"] for r in result.data["itemss"]]
+    names = [r["name"] for r in result.data["items"]]
     assert "Alpha" in names
 
 
@@ -154,9 +154,9 @@ async def test_delete_mutation(gql_schema: tuple[Any, SQLiteAdapter]) -> None:
     del_res = await schema.execute(f"mutation {{ delete_items(id: {item_id}) {{ id }} }}")
     assert del_res.errors is None, del_res.errors
 
-    list_res = await schema.execute("query { itemss { id } }")
+    list_res = await schema.execute("query { items { id } }")
     assert list_res.data is not None
-    ids = [r["id"] for r in list_res.data["itemss"]]
+    ids = [r["id"] for r in list_res.data["items"]]
     assert item_id not in ids
 
 
@@ -183,11 +183,11 @@ async def test_soft_delete_filter_applied(sqlite_schema: SQLiteAdapter) -> None:
     await conn.execute("INSERT INTO articles (title, deleted_at) VALUES ('Dead', '2024-01-01')")
     await conn.commit()
 
-    result = await schema.execute("query { articless { id title } }")
+    result = await schema.execute("query { articles { id title } }")
     assert result.errors is None, result.errors
     assert result.data is not None
     assert result.data is not None
-    titles = [r["title"] for r in result.data["articless"]]
+    titles = [r["title"] for r in result.data["articles"]]
     assert "Live" in titles
     assert "Dead" not in titles, "Soft-deleted article must not appear in list"
 
@@ -275,13 +275,13 @@ async def test_auth_predicate_pushed_to_sql(sqlite_schema: SQLiteAdapter) -> Non
         claims={},
     )
     result = await schema.execute(
-        "query { itemss { id name owner_id } }",
+        "query { items { id name owner_id } }",
         context_value={"auth_context": auth_ctx_user1},
     )
     assert result.errors is None, result.errors
     assert result.data is not None
     assert result.data is not None
-    names = [r["name"] for r in result.data["itemss"]]
+    names = [r["name"] for r in result.data["items"]]
     assert "My Item" in names
     assert (
         "Their Item" not in names

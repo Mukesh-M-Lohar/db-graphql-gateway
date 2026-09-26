@@ -69,7 +69,7 @@ async def test_max_depth_rule_rejection(sqlite_gql_schema: Any) -> None:
 
     deep_query = """
     query {
-        itemss {
+        items {
             id
             name
         }
@@ -93,8 +93,8 @@ async def test_max_aliases_rule_rejection(sqlite_gql_schema: Any) -> None:
 
     many_aliases_query = """
     query {
-        a1: itemss { id }
-        a2: itemss { id }
+        a1: items { id }
+        a2: items { id }
     }
     """
 
@@ -128,7 +128,7 @@ async def test_max_complexity_rule_rejection(sqlite_gql_schema: Any) -> None:
     adapter, db_schema, ir_types = sqlite_gql_schema
 
     def complexity_extension() -> Any:
-        # A simple query `itemss { id name }` has complexity 2.
+        # A simple query `items { id name }` has complexity 2.
         # Setting max to 1 should reject it.
         return strawberry.extensions.AddValidationRules(
             [create_max_complexity_rule(max_complexity=1)]
@@ -141,7 +141,7 @@ async def test_max_complexity_rule_rejection(sqlite_gql_schema: Any) -> None:
 
     query = """
     query {
-        itemss {
+        items {
             id
             name
         }

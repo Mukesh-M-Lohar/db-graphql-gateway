@@ -116,7 +116,7 @@ async def test_final_acceptance_end_to_end(
 
     query = """
     query {
-      taskss {
+      tasks {
         id
         title
         owner_id
@@ -127,7 +127,7 @@ async def test_final_acceptance_end_to_end(
     assert response.errors is None, f"Query errors: {response.errors}"
     assert response.data is not None
 
-    tasks = response.data.get("taskss", [])
+    tasks = response.data.get("tasks", [])
 
     # User 2 has tasks 3 and 4
     assert len(tasks) == 2

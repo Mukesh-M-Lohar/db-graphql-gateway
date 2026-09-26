@@ -82,11 +82,16 @@ testpaths = ["tests"]
 dev = [
     "aiosqlite>=0.22.1",
     "asyncmy>=0.2.14",
+    "asyncpg>=0.31.0",
+    "faker>=40.39.0",
+    "httpx>=0.28.1",
     "mkdocs>=1.6.1",
     "mkdocs-material>=9.7.7",
     "pre-commit>=4.6.2",
+    "pyjwt>=2.13.0",
     "sqlalchemy>=2.0.52",
     "types-pyyaml>=6.0.12.20260815",
+    "uvicorn>=0.54.0",
 ]
 
 [[tool.mypy.overrides]]

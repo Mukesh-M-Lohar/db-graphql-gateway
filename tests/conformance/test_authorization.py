@@ -36,7 +36,7 @@ async def test_authorization_predicate_pushdown(
 
     query = """
     query {
-        userss {
+        users {
             id
             name
         }
@@ -58,8 +58,8 @@ async def test_authorization_predicate_pushdown(
 
     assert res1.errors is None
     assert res1.data is not None
-    assert len(res1.data["userss"]) == 1
-    assert res1.data["userss"][0]["name"] == "Alice"
+    assert len(res1.data["users"]) == 1
+    assert res1.data["users"][0]["name"] == "Alice"
 
     # 2. Admin queries
     ctx_admin = AuthContext(user_id=3, roles=["admin"], claims={}, is_authenticated=True)  # type: ignore
@@ -70,7 +70,7 @@ async def test_authorization_predicate_pushdown(
     assert res2.data is not None
     # AuthorizationEngine currently only evaluates the policy rules.
     # It does not have built-in RBAC bypass logic, so $user_id=3 returns just owner_id=3.
-    assert len(res2.data["userss"]) == 1
-    assert res2.data["userss"][0]["name"] == "Admin"
-    for u in res2.data["userss"]:
+    assert len(res2.data["users"]) == 1
+    assert res2.data["users"][0]["name"] == "Admin"
+    for u in res2.data["users"]:
         assert u["id"] in (1, 2, 3)

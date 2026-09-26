@@ -139,9 +139,9 @@ async def gql_schema(mysql_adapter: MySQLAdapter) -> tuple[Any, MySQLAdapter]:
 @pytest.mark.asyncio
 async def test_list_query_empty(gql_schema: tuple[Any, MySQLAdapter]) -> None:
     schema, _ = gql_schema
-    result = await schema.execute("query { userss { id name } }")
+    result = await schema.execute("query { users { id name } }")
     assert result.errors is None
-    assert result.data["userss"] == []
+    assert result.data["users"] == []
 
 
 @pytest.mark.asyncio
@@ -178,9 +178,9 @@ async def test_delete_user(gql_schema: tuple[Any, MySQLAdapter]) -> None:
     delete = await schema.execute(f"mutation {{ delete_users(id: {uid}) {{ id }} }}")
     assert delete.errors is None, delete.errors
 
-    list_res = await schema.execute("query { userss { id } }")
+    list_res = await schema.execute("query { users { id } }")
     assert list_res.data is not None
-    ids = [r["id"] for r in list_res.data["userss"]]
+    ids = [r["id"] for r in list_res.data["users"]]
     assert uid not in ids
 
 
@@ -261,13 +261,13 @@ async def test_auth_predicate_pushdown(mysql_adapter: MySQLAdapter) -> None:
     # Query as user_id=1
     auth_ctx = AuthContext(is_authenticated=True, user_id="1", roles=[], claims={})
     result = await schema.execute(
-        "query { userss { id name owner_id } }",
+        "query { users { id name owner_id } }",
         context_value={"auth_context": auth_ctx},
     )
     assert result.errors is None, result.errors
     assert result.data is not None
     assert result.data is not None
-    names = [r["name"] for r in result.data["userss"]]
+    names = [r["name"] for r in result.data["users"]]
     assert "Mine" in names
     assert "Theirs" not in names
 

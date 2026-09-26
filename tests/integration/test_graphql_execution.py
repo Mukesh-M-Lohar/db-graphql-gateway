@@ -38,7 +38,7 @@ async def test_graphql_execution_end_to_end(db_pool: asyncpg.Pool) -> None:
     # 6. Execute!
     query = """
         query {
-            userss {
+            users {
                 username
             }
         }
@@ -48,8 +48,8 @@ async def test_graphql_execution_end_to_end(db_pool: asyncpg.Pool) -> None:
 
     assert result.errors is None
     assert result.data is not None
-    assert "userss" in result.data
+    assert "users" in result.data
 
-    users = result.data["userss"]
+    users = result.data["users"]
     assert len(users) >= 1
     assert any(u["username"] == "graphql_tester" for u in users)

@@ -75,7 +75,7 @@ async def test_query_planner_selective_columns(pg_adapter_qp_data: Any) -> None:
     # 4. Query only first_name and email (leaving last_name and salary unrequested)
     query = """
     query {
-        employeess {
+        employees {
             first_name
             email
         }
@@ -86,7 +86,7 @@ async def test_query_planner_selective_columns(pg_adapter_qp_data: Any) -> None:
 
     assert res.errors is None, f"Query errors: {res.errors}"
     assert res.data is not None
-    employees = res.data["employeess"]
+    employees = res.data["employees"]
     assert len(employees) == 2
     assert employees[0]["first_name"] == "John"
     assert employees[0]["email"] == "john@example.com"

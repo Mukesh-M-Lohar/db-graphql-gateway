@@ -83,7 +83,7 @@ async def test_authorization_row_level_isolation(pg_adapter_auth_data: Any) -> N
     context_user_a = {"auth_context": AuthContext(user_id="user_a", is_authenticated=True)}
     query = """
     query {
-        projectss {
+        projects {
             id
             name
             owner_id
@@ -94,7 +94,7 @@ async def test_authorization_row_level_isolation(pg_adapter_auth_data: Any) -> N
     res_a = await schema.execute(query, context_value=context_user_a)
     assert res_a.errors is None, f"Query errors: {res_a.errors}"
     assert res_a.data is not None
-    projects_a = res_a.data["projectss"]
+    projects_a = res_a.data["projects"]
 
     # User A must ONLY see their own projects
     assert len(projects_a) == 2
@@ -104,7 +104,7 @@ async def test_authorization_row_level_isolation(pg_adapter_auth_data: Any) -> N
     # User A attempts to fetch Project B (owned by user_b, id=3) with explicit WHERE clause
     query_target_b = """
     query {
-        projectss(where: { id: { eq: 3 } }) {
+        projects(where: { id: { eq: 3 } }) {
             id
             name
             owner_id
@@ -115,7 +115,7 @@ async def test_authorization_row_level_isolation(pg_adapter_auth_data: Any) -> N
     res_b = await schema.execute(query_target_b, context_value=context_user_a)
     assert res_b.errors is None, f"Query errors: {res_b.errors}"
     assert res_b.data is not None
-    projects_b = res_b.data["projectss"]
+    projects_b = res_b.data["projects"]
 
     # User A CANNOT fetch Project B even if they know Project B's exact primary key ID!
     assert len(projects_b) == 0, f"User A was able to access unauthorized Project B: {projects_b}"

@@ -21,6 +21,7 @@
 
 ## Next Actions
 - Project is effectively complete! All functionality, tests, and documentation are verified.
+- Built a Docker-based integration test workflow with strict security and type checks, which runs 9 advanced test levels natively asserting against real postgres.
 
 ## Issues / Blockers
 - None.
