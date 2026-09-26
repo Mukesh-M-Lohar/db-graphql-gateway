@@ -37,6 +37,16 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           
+      - name: Push tag to remote
+        if: steps.semantic-release.outputs.released == 'true'
+        run: git push origin ${{ steps.semantic-release.outputs.tag }}
+        
+      - name: Create GitHub Release
+        if: steps.semantic-release.outputs.released == 'true'
+        run: gh release create ${{ steps.semantic-release.outputs.tag }} --title ${{ steps.semantic-release.outputs.tag }} --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
       - name: Publish to PyPI
         if: steps.semantic-release.outputs.released == 'true'
         uses: pypa/gh-action-pypi-publish@release/v1

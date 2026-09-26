@@ -113,6 +113,8 @@ version_toml = [
 ]
 branch = "main"
 upload_to_pypi = false
-upload_to_release = true
+upload_to_release = false
 build_command = "pip install uv && uv build"
 commit_version_number = false
+push = false
+vcs_release = false
