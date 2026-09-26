@@ -23,6 +23,7 @@ dsn = os.getenv(
     "SGQL_DATABASE_URL", "postgresql://sgql_test:sgql_password@localhost:5433/sgql_test_db"
 )
 
+adapter: Any
 if dsn.startswith("postgresql"):
     adapter = PostgresAdapter(dsn=dsn)
 elif dsn.startswith("sqlite"):
