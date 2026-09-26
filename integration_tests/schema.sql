@@ -62,5 +62,13 @@ CREATE TABLE user_roles (
     PRIMARY KEY (user_id, role_id)
 );
 
+CREATE TYPE task_status AS ENUM ('TODO', 'IN_PROGRESS', 'DONE');
+
+CREATE TABLE tasks (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    status task_status DEFAULT 'TODO'
+);
+
 -- Reset pg_stat_statements
 SELECT pg_stat_statements_reset();

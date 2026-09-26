@@ -61,3 +61,9 @@ CREATE TABLE user_roles (
     assigned_by INT,
     PRIMARY KEY (user_id, role_id)
 );
+
+CREATE TABLE tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title VARCHAR(255) NOT NULL,
+    status VARCHAR(50) DEFAULT 'TODO'
+);

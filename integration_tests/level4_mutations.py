@@ -9,7 +9,7 @@ async def run_level4(tenant_id: int, user_id: int) -> list[dict[str, Any]]:
 
     # 1. Composite PK insert / update (Table: user_roles)
     # We will try to insert a user_role, then delete it.
-    
+
     mutation1 = """
     mutation($id: JSON!) {
         create_user_roles(input: { user_id: 1, role_id: 1, assigned_by: 1 }) {
@@ -21,7 +21,12 @@ async def run_level4(tenant_id: int, user_id: int) -> list[dict[str, Any]]:
         }
     }
     """
-    res1 = await execute_query(mutation1, tenant_id=tenant_id, user_id=user_id, variables={"id": {"user_id": 1, "role_id": 1}})
+    res1 = await execute_query(
+        mutation1,
+        tenant_id=tenant_id,
+        user_id=user_id,
+        variables={"id": {"user_id": 1, "role_id": 1}},
+    )
     passed1 = res1["errors"] is None and "create_user_roles" in res1["data"]
 
     results.append(
@@ -62,6 +67,40 @@ async def run_level4(tenant_id: int, user_id: int) -> list[dict[str, Any]]:
             "passed": passed2_mut and passed2_q,
             "queries": res2["query_count"] + res2_q["query_count"],
             "latency_ms": res2["latency_ms"] + res2_q["latency_ms"],
+        }
+    )
+
+    # 3. Enum Test
+    from engine import DB_DSN
+
+    if DB_DSN.startswith("postgres"):
+        mutation3 = """
+        mutation {
+            create_tasks(input: { title: "Fix enums", status: DONE }) {
+                id
+                status
+            }
+        }
+        """
+    else:
+        mutation3 = """
+        mutation {
+            create_tasks(input: { title: "Fix enums", status: "DONE" }) {
+                id
+                status
+            }
+        }
+        """
+
+    res3 = await execute_query(mutation3, tenant_id=tenant_id, user_id=user_id)
+    passed3 = res3["errors"] is None and res3["data"]["create_tasks"]["status"] == "DONE"
+
+    results.append(
+        {
+            "name": "L4: Enum parsing and mapping",
+            "passed": passed3,
+            "queries": res3["query_count"] if res3.get("query_count") else 0,
+            "latency_ms": res3["latency_ms"] if res3.get("latency_ms") else 0.0,
         }
     )
 
