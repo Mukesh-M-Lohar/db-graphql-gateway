@@ -319,7 +319,16 @@ class GraphQLSchemaBuilder:
             result = await self.db_adapter.execute(compiled_query)
             rows = result.data
 
-            has_next_page = len(rows) > effective_limit
+            if last is not None:
+                has_next_page = False
+                has_previous_page = current_offset > 0
+            elif first is not None:
+                has_next_page = len(rows) > effective_limit
+                has_previous_page = False
+            else:
+                has_next_page = len(rows) > effective_limit
+                has_previous_page = current_offset > 0
+
             data_rows = rows[:effective_limit]
 
             edges: list[Any] = []
@@ -333,7 +342,7 @@ class GraphQLSchemaBuilder:
 
             page_info = PageInfo(
                 has_next_page=has_next_page,
-                has_previous_page=current_offset > 0,
+                has_previous_page=has_previous_page,
                 start_cursor=start_cursor,
                 end_cursor=end_cursor,
             )
