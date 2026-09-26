@@ -31,20 +31,6 @@ pip install "db-graphql-gateway[fastapi]"
 - **Zero Raw SQL Exposure**: Clients never provide SQL fragments. All filters, sorting rules, and pagination constraints are strictly typed GraphQL arguments, protecting you from SQL injection.
 - **AST Security Limits**: Configured `max_depth` and `max_aliases` protections via `QueryDepthLimiter` and `MaxAliasesLimiter` to harden the gateway against expansive query attacks.
 
-## ⚖️ How is this different?
-
-There are several excellent tools in this space, but `db-graphql-gateway` makes very different architectural tradeoffs.
-
-### vs. PostGraphile
-[PostGraphile](https://www.graphile.org/postgraphile/) is a fantastic tool that heavily embraces the **Database as the Application Layer**. 
-- **Database Lock-in**: PostGraphile is strictly bound to PostgreSQL. `db-graphql-gateway` uses a modular adapter system supporting Postgres, MySQL, and SQLite.
-- **Authorization Model**: PostGraphile relies entirely on PostgreSQL's Row-Level Security (RLS) and database `GRANT` roles. You must create database users/roles for your API clients. `db-graphql-gateway` keeps authorization at the **Application Tier**. It uses an `AuthorizationEngine` that evaluates Python rules and pushes them down into the SQL AST automatically. You only need a single database connection.
-
-### vs. Supabase / pg_graphql
-[pg_graphql](https://supabase.github.io/pg_graphql/) (the engine powering Supabase's GraphQL API) is an incredibly fast, native Postgres extension written in Rust.
-- **Deployment**: `pg_graphql` runs *inside* the database as a native extension. This makes it blazingly fast, but many managed database providers (like AWS RDS) restrict installing custom extensions. `db-graphql-gateway` runs in your Python backend (e.g., as a FastAPI route), requiring zero modifications to your database server.
-- **Extensibility**: Because `db-graphql-gateway` is a Python library, you can easily intercept the GraphQL context, inject custom Strawberry resolvers alongside the generated ones, or wrap the execution in custom ASGI middleware.
-
 ## ⚡ Quickstart Example
 
 Here is a complete example of connecting to your database, building the GraphQL schema dynamically, and mounting it in FastAPI.
