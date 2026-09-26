@@ -26,8 +26,8 @@ echo "Waiting for gateway to boot..."
 sleep 5
 
 echo "5. Running integration tests..."
-uv run python run_integration.py || (echo "Tests failed"; kill $GATEWAY_PID; docker compose down; exit 1)
+uv run python run_integration.py || (echo "Tests failed"; kill $GATEWAY_PID; docker compose down -v; exit 1)
 
 echo "6. Teardown..."
 kill $GATEWAY_PID
-docker compose down
+docker compose down -v

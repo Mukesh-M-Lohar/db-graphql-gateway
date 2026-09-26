@@ -1,8 +1,10 @@
 from typing import Any
 import os
+import threading
 import yaml
 import uvicorn
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from db_graphql_gateway.schema.config import GatewayConfig
 from db_graphql_gateway.database.adapters.postgres.adapter import PostgresAdapter
 from db_graphql_gateway.database.adapters.sqlite.adapter import SQLiteAdapter
@@ -12,6 +14,40 @@ from db_graphql_gateway.graphql.builder import GraphQLSchemaBuilder
 from db_graphql_gateway.integrations.fastapi_integration import make_graphql_router
 
 app = FastAPI(title="GraphQL Gateway Integration Test")
+
+# ---------------------------------------------------------------------------
+# SQLite query counter — incremented by aiosqlite trace callback.
+# Thread-safe via a lock since aiosqlite calls the callback from its
+# internal worker thread.
+# ---------------------------------------------------------------------------
+_sqlite_query_count: int = 0
+_sqlite_query_lock = threading.Lock()
+
+
+def _sqlite_trace_callback(stmt: str) -> None:  # pragma: no cover
+    """Called by aiosqlite for every SQL statement issued on the connection."""
+    global _sqlite_query_count
+    # Ignore PRAGMA statements that aiosqlite issues internally at connect time
+    if not stmt.strip().upper().startswith("PRAGMA"):
+        with _sqlite_query_lock:
+            _sqlite_query_count += 1
+
+
+@app.get("/admin/query-count")
+async def get_query_count() -> JSONResponse:
+    """Return the current SQLite statement count (SQLite mode only)."""
+    with _sqlite_query_lock:
+        return JSONResponse({"count": _sqlite_query_count})
+
+
+@app.get("/admin/query-count/reset")
+async def reset_query_count() -> JSONResponse:
+    """Reset the SQLite statement counter to 0."""
+    global _sqlite_query_count
+    with _sqlite_query_lock:
+        _sqlite_query_count = 0
+    return JSONResponse({"count": 0})
+
 
 # Load Config
 config_path = os.getenv("SGQL_CONFIG", "sgql.yaml")
@@ -72,6 +108,10 @@ async def startup() -> None:
                     )
                 )
         auth_engine = AuthorizationEngine(policies=policies)
+
+    # Wire up SQLite query counter via trace callback
+    if isinstance(adapter, SQLiteAdapter) and adapter._conn is not None:
+        await adapter._conn.set_trace_callback(_sqlite_trace_callback)
 
     # 1. Inspect DB
     inspector = adapter.inspector()

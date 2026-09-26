@@ -1,7 +1,7 @@
 site_name: db-graphql-gateway
 site_description: A database-agnostic GraphQL gateway that pushes authorization and filtering down to SQL.
 strict: false
-site_url: https://github.com/forgedlohar/db-graphql-gateway
+site_url: https://forgedlohar.github.io/db-graphql-gateway/
 
 theme:
   name: 'material'
@@ -56,6 +56,7 @@ nav:
   - Getting Started:
       - Quickstart: quickstart.md
       - CLI Reference: cli.md
+      - Testing: testing.md
       - FAQ: FAQ.md
 
   - Extending the Gateway:
