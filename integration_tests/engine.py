@@ -10,6 +10,7 @@ DB_DSN = os.getenv(
     "SGQL_DATABASE_URL", "postgresql://sgql_test:sgql_password@localhost:5433/sgql_test_db"
 )
 GRAPHQL_URL = "http://localhost:8000/graphql"
+ADMIN_URL = "http://localhost:8000/admin"
 
 SECRET = "supersecretkeythatisatleast32byteslong!"
 ISSUER = "integration-test-issuer"
@@ -31,18 +32,22 @@ async def execute_query(
     query: str, variables: dict[str, Any] | None = None, tenant_id: int = 1, user_id: int = 1
 ) -> dict[str, Any]:
     is_sqlite = DB_DSN.startswith("sqlite")
-    conn = None
-    if not is_sqlite:
-        conn = await asyncpg.connect(DB_DSN)
-        # Get current query stats state to diff against
-        await conn.execute("SELECT pg_stat_statements_reset()")
-
-    start_time = time.time()
-
-    token = get_token(tenant_id, user_id)
-    headers = {"Authorization": f"Bearer {token}"}
 
     async with httpx.AsyncClient() as client:
+        if is_sqlite:
+            # Reset the SQLite statement counter on the gateway server before the query
+            await client.get(f"{ADMIN_URL}/query-count/reset", timeout=5.0)
+        else:
+            # Reset pg_stat_statements for Postgres
+            conn = await asyncpg.connect(DB_DSN)
+            await conn.execute("SELECT pg_stat_statements_reset()")
+            await conn.close()
+
+        start_time = time.time()
+
+        token = get_token(tenant_id, user_id)
+        headers = {"Authorization": f"Bearer {token}"}
+
         response = await client.post(
             GRAPHQL_URL,
             json={"query": query, "variables": variables or {}},
@@ -50,17 +55,19 @@ async def execute_query(
             timeout=30.0,
         )
 
-    end_time = time.time()
+        end_time = time.time()
 
-    total_queries = -1
-    if not is_sqlite and conn:
-        # Get query count
-        # Note: query count might be multiple due to DataLoader
-        stats = await conn.fetch(
-            "SELECT query, calls FROM pg_stat_statements WHERE query NOT LIKE '%pg_stat_statements%'"
-        )
-        total_queries = sum(row["calls"] for row in stats)
-        await conn.close()
+        if is_sqlite:
+            # Read back the counter from the gateway server
+            count_resp = await client.get(f"{ADMIN_URL}/query-count", timeout=5.0)
+            total_queries = count_resp.json()["count"]
+        else:
+            conn = await asyncpg.connect(DB_DSN)
+            stats = await conn.fetch(
+                "SELECT query, calls FROM pg_stat_statements WHERE query NOT LIKE '%pg_stat_statements%'"
+            )
+            total_queries = sum(row["calls"] for row in stats)
+            await conn.close()
 
     result = response.json()
     return {
