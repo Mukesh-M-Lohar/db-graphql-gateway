@@ -115,3 +115,4 @@ branch = "main"
 upload_to_pypi = false
 upload_to_release = true
 build_command = "pip install uv && uv build"
+commit_version_number = false
