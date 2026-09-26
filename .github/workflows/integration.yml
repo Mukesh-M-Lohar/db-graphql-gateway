@@ -25,6 +25,10 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras --dev
 
-      - name: Run Integration Tests
+      - name: Run Postgres Integration Tests
         run: |
           ./integration_tests/run_all.sh
+
+      - name: Run SQLite Integration Tests
+        run: |
+          ./integration_tests/run_sqlite.sh
