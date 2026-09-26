@@ -18,13 +18,6 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-
-[project.urls]
-Homepage = "https://github.com/Mukesh-M-Lohar/db-graphql-gateway"
-Documentation = "https://Mukesh-M-Lohar.github.io/db-graphql-gateway/"
-Repository = "https://github.com/Mukesh-M-Lohar/db-graphql-gateway.git"
-Issues = "https://github.com/Mukesh-M-Lohar/db-graphql-gateway/issues"
-
 dependencies = [
     "strawberry-graphql>=0.200.0",
     "pyjwt[crypto]>=2.8.0",
