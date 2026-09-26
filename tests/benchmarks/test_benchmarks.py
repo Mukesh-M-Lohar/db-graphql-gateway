@@ -14,6 +14,7 @@ def test_benchmark_sqlite_query(benchmark):
     adapter = SQLiteAdapter(":memory:")
     loop.run_until_complete(adapter.connect())
     conn = adapter._conn
+    assert conn is not None
     for stmt in get_ddl("sqlite"):
         loop.run_until_complete(conn.execute(stmt))
 
