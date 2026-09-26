@@ -136,13 +136,18 @@ class SQLiteAdapter(DatabaseAdapter):
         async with conn.execute(query.sql, params) as cur:
             if query.fetch_after_write:
                 # SELECT-after-write: use lastrowid for INSERT, known pk for UPDATE/DELETE
+                if cur.rowcount == 0:
+                    await conn.commit()
+                    return QueryResult(data=[], rows_affected=0)
                 pk_val = cur.lastrowid if query.fetch_pk_value is None else query.fetch_pk_value
                 await conn.commit()
                 if query.fetch_table and query.fetch_pk_col and pk_val is not None:
-                    return await self._fetch_by_pk(query.fetch_table, query.fetch_pk_col, pk_val)
-                return QueryResult(data=[])
+                    res = await self._fetch_by_pk(query.fetch_table, query.fetch_pk_col, pk_val)
+                    res.rows_affected = cur.rowcount
+                    return res
+                return QueryResult(data=[], rows_affected=cur.rowcount)
             rows = await cur.fetchall()
-        return QueryResult(data=[dict(row) for row in rows])
+        return QueryResult(data=[dict(row) for row in rows], rows_affected=cur.rowcount)
 
     async def execute_many(self, queries: list[CompiledQuery]) -> list[QueryResult]:
         conn = self._require_conn()
@@ -154,20 +159,25 @@ class SQLiteAdapter(DatabaseAdapter):
                 )
                 async with conn.execute(query.sql, params) as cur:
                     if query.fetch_after_write:
+                        if cur.rowcount == 0:
+                            results.append(QueryResult(data=[], rows_affected=0))
+                            continue
                         pk_val = (
                             cur.lastrowid if query.fetch_pk_value is None else query.fetch_pk_value
                         )
                         if query.fetch_table and query.fetch_pk_col and pk_val is not None:
-                            results.append(
-                                await self._fetch_by_pk(
-                                    query.fetch_table, query.fetch_pk_col, pk_val
-                                )
+                            res = await self._fetch_by_pk(
+                                query.fetch_table, query.fetch_pk_col, pk_val
                             )
+                            res.rows_affected = cur.rowcount
+                            results.append(res)
                         else:
-                            results.append(QueryResult(data=[]))
+                            results.append(QueryResult(data=[], rows_affected=cur.rowcount))
                     else:
                         rows = await cur.fetchall()
-                        results.append(QueryResult(data=[dict(r) for r in rows]))
+                        results.append(
+                            QueryResult(data=[dict(r) for r in rows], rows_affected=cur.rowcount)
+                        )
         return results
 
     async def execute_raw_dml(self, sql: str) -> None:

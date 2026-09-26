@@ -139,17 +139,17 @@ class MySQLAdapter(DatabaseAdapter):
                 if query.fetch_after_write:
                     if cur.rowcount == 0:
                         await conn.commit()
-                        return QueryResult(data=[])
+                        return QueryResult(data=[], rows_affected=0)
                     pk_val = cur.lastrowid if query.fetch_pk_value is None else query.fetch_pk_value
                     await conn.commit()
                     if query.fetch_table and query.fetch_pk_col and pk_val:
-                        return await self._fetch_by_pk(
-                            query.fetch_table, query.fetch_pk_col, pk_val
-                        )
-                    return QueryResult(data=[])
+                        res = await self._fetch_by_pk(query.fetch_table, query.fetch_pk_col, pk_val)
+                        res.rows_affected = cur.rowcount
+                        return res
+                    return QueryResult(data=[], rows_affected=cur.rowcount)
 
                 rows = await cur.fetchall()
-                return QueryResult(data=list(rows))
+                return QueryResult(data=list(rows), rows_affected=cur.rowcount)
 
     async def execute_many(self, queries: list[CompiledQuery]) -> list[QueryResult]:
         pool = self._require_pool()
@@ -168,7 +168,7 @@ class MySQLAdapter(DatabaseAdapter):
 
                         if query.fetch_after_write:
                             if cur.rowcount == 0:
-                                results.append(QueryResult(data=[]))
+                                results.append(QueryResult(data=[], rows_affected=0))
                                 continue
                             pk_val = (
                                 cur.lastrowid
@@ -176,16 +176,16 @@ class MySQLAdapter(DatabaseAdapter):
                                 else query.fetch_pk_value
                             )
                             if query.fetch_table and query.fetch_pk_col and pk_val:
-                                results.append(
-                                    await self._fetch_by_pk(
-                                        query.fetch_table, query.fetch_pk_col, pk_val
-                                    )
+                                res = await self._fetch_by_pk(
+                                    query.fetch_table, query.fetch_pk_col, pk_val
                                 )
+                                res.rows_affected = cur.rowcount
+                                results.append(res)
                             else:
-                                results.append(QueryResult(data=[]))
+                                results.append(QueryResult(data=[], rows_affected=cur.rowcount))
                         else:
                             rows = await cur.fetchall()
-                            results.append(QueryResult(data=list(rows)))
+                            results.append(QueryResult(data=list(rows), rows_affected=cur.rowcount))
 
                     await cur.execute("COMMIT")
                 except Exception:

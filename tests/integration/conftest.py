@@ -21,6 +21,10 @@ async def db_pool(postgres_container: PostgresContainer) -> AsyncGenerator[async
     pool = await asyncpg.create_pool(url)
     async with pool.acquire() as conn:
         await conn.execute("""
+            DROP VIEW IF EXISTS published_posts CASCADE;
+            DROP TABLE IF EXISTS posts CASCADE;
+            DROP TABLE IF EXISTS users CASCADE;
+
             CREATE TABLE users (
                 id SERIAL PRIMARY KEY,
                 username VARCHAR(255) NOT NULL UNIQUE,
@@ -43,7 +47,7 @@ async def db_pool(postgres_container: PostgresContainer) -> AsyncGenerator[async
 
     # Cleanup schema after test if needed
     async with pool.acquire() as conn:
-        await conn.execute("DROP VIEW published_posts;")
-        await conn.execute("DROP TABLE posts;")
-        await conn.execute("DROP TABLE users;")
+        await conn.execute("DROP VIEW IF EXISTS published_posts CASCADE;")
+        await conn.execute("DROP TABLE IF EXISTS posts CASCADE;")
+        await conn.execute("DROP TABLE IF EXISTS users CASCADE;")
     await pool.close()
