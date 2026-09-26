@@ -69,6 +69,11 @@ async def pg_adapter_m2m_data(postgres_container: Any) -> AsyncGenerator[Any, No
         )
 
     yield adapter
+
+    async with adapter.pool.acquire() as conn:
+        await conn.execute("DROP TABLE post_tags;")
+        await conn.execute("DROP TABLE tags;")
+        await conn.execute("DROP TABLE posts;")
     await adapter.close()
 
 
