@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-cd /root/db-graphql-gateway/integration_tests
+cd "$(dirname "$0")"
 
 echo "1. Starting Docker Setup..."
 docker compose up -d
