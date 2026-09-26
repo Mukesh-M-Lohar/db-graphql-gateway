@@ -1,0 +1,25 @@
+models:
+  - name: users
+    fields:
+      - name: email
+        is_sensitive: true
+
+auth:
+  providers:
+    - type: jwt
+      issuer: "integration-test-issuer"
+      audience: "integration-test-audience"
+      secret: "supersecretkeythatisatleast32byteslong!"
+      algorithm: "HS256"
+  rules:
+    - target: users
+      predicate: "{tenant_id} = {jwt.tenant_id}"
+    - target: posts
+      predicate: "{user_id} = {jwt.user_id}"
+    - target: comments
+      predicate: "{user_id} = {jwt.user_id}"
+
+security:
+  max_depth: 8
+  max_aliases: 15
+  max_complexity: 100
