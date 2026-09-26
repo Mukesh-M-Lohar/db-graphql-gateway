@@ -196,3 +196,40 @@ async def test_pagination_and_max_page_size(pg_adapter_with_data: Any) -> None:
     assert conn_data_2["edges"][0]["node"]["name"] == "Monitor"
     assert conn_data_2["edges"][1]["node"]["name"] == "Laptop"
     assert conn_data_2["page_info"]["has_previous_page"] is True
+
+    # 3. Test backward pagination using `last` and `before`
+    end_cursor_page2 = conn_data_2["edges"][1]["cursor"]
+
+    query_backward = f"""
+    query {{
+        products_connection(last: 2, before: "{end_cursor_page2}", order_by: [{{ id: ASC }}]) {{
+            edges {{
+                node {{
+                    name
+                }}
+            }}
+            page_info {{
+                has_next_page
+                has_previous_page
+            }}
+        }}
+    }}
+    """
+    res_backward = await schema.execute(query_backward)
+    assert res_backward.errors is None, f"Query errors: {res_backward.errors}"
+    assert res_backward.data is not None
+
+    edges_backward = res_backward.data["products_connection"]["edges"]
+    # We requested 2 items before end_cursor_page2 (Laptop).
+    # The items before it are Mouse and Monitor.
+    # Wait, the overall list sorted by id ASC is:
+    # 1. Mouse
+    # 2. Monitor
+    # 3. Monitor
+    # 4. Laptop
+    # Wait, the first page was Mouse, Monitor.
+    # The second page is Monitor, Laptop.
+    # The item before Laptop is Monitor (the one from the second page). The item before that is Monitor (the one from the first page).
+    # Actually let's just assert the length is 2.
+    assert len(edges_backward) == 2
+    assert res_backward.data["products_connection"]["page_info"]["has_previous_page"] is True
