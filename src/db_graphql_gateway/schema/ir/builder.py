@@ -1,5 +1,5 @@
 from db_graphql_gateway.database.adapters.interfaces import TypeMapper
-from db_graphql_gateway.database.models.schema import DatabaseSchema
+from db_graphql_gateway.database.models.schema import DatabaseSchema, Relationship
 from db_graphql_gateway.schema.config import GatewayConfig
 from db_graphql_gateway.schema.ir.models import (
     ColumnRef,
@@ -17,10 +17,62 @@ class IRBuilder:
 
     def build(self, db_schema: DatabaseSchema, config: GatewayConfig) -> list[GraphQLTypeIR]:
         types_map: dict[str, GraphQLTypeIR] = {}
+        junction_tables: set[str] = set()
+
+        # 0. Pass 0: Detect junction tables for Many-to-Many
+        for namespace_name, namespace in db_schema.namespaces.items():
+            for table_name, table in namespace.tables.items():
+                m2o_rels = [r for r in table.relationships if r.kind == "many_to_one"]
+                o2m_rels = [r for r in table.relationships if r.kind == "one_to_many"]
+
+                # Heuristic: exactly 2 many-to-one FKs, no one-to-many inverses
+                if len(m2o_rels) == 2 and len(o2m_rels) == 0:
+                    fk_cols = set(m2o_rels[0].source_columns + m2o_rels[1].source_columns)
+                    non_fk_cols = [c.name for c in table.columns if c.name not in fk_cols]
+
+                    allowed_extra = {"id", "created_at", "updated_at"}
+                    if all(c in allowed_extra for c in non_fk_cols):
+                        junction_tables.add(table_name)
+
+                        t1_name = m2o_rels[0].target_table
+                        t2_name = m2o_rels[1].target_table
+
+                        t1 = namespace.tables.get(t1_name)
+                        t2 = namespace.tables.get(t2_name)
+
+                        if t1 and t2:
+                            # Add many_to_many on T1
+                            t1.relationships.append(
+                                Relationship(
+                                    name=t2_name if t2_name.endswith("s") else f"{t2_name}s",
+                                    target_table=t2_name,
+                                    kind="many_to_many",
+                                    source_columns=m2o_rels[0].target_columns,
+                                    target_columns=m2o_rels[1].target_columns,
+                                    join_table=table_name,
+                                    join_source_columns=m2o_rels[0].source_columns,
+                                    join_target_columns=m2o_rels[1].source_columns,
+                                )
+                            )
+                            # Add many_to_many on T2
+                            t2.relationships.append(
+                                Relationship(
+                                    name=t1_name if t1_name.endswith("s") else f"{t1_name}s",
+                                    target_table=t1_name,
+                                    kind="many_to_many",
+                                    source_columns=m2o_rels[1].target_columns,
+                                    target_columns=m2o_rels[0].target_columns,
+                                    join_table=table_name,
+                                    join_source_columns=m2o_rels[1].source_columns,
+                                    join_target_columns=m2o_rels[0].source_columns,
+                                )
+                            )
 
         # 1. First pass: build base scalar types & fields
         for namespace_name, namespace in db_schema.namespaces.items():
             for table_name, table in namespace.tables.items():
+                if table_name in junction_tables:
+                    continue
                 table_config = config.tables.get(table_name)
                 if table_config and table_config.hidden:
                     continue
@@ -138,6 +190,8 @@ class IRBuilder:
                         join_table=TableRef(schema=namespace_name, name=rel.join_table)
                         if rel.join_table
                         else None,
+                        join_source_columns=rel.join_source_columns,
+                        join_target_columns=rel.join_target_columns,
                     )
 
                     rel_ir = GraphQLRelationshipIR(

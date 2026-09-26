@@ -59,14 +59,74 @@ class DataLoaderRegistry:
 
     def _create_batch_load_fn(self, rel: GraphQLRelationshipIR) -> Any:
         async def batch_load_fn(keys: list[Any]) -> list[Any]:
-            target_col = rel.join.target_columns[0]
+            if rel.kind == "many_to_many":
+                if (
+                    not rel.join.join_table
+                    or not rel.join.join_source_columns
+                    or not rel.join.join_target_columns
+                ):
+                    return [[] for _ in keys]
 
-            # Resolve schema from IR map; fall back to "public" for Postgres
-            # compatibility if the map is somehow missing the target type.
+                join_schema = rel.join.join_table.schema
+                join_table_name = rel.join.join_table.name
+                join_source_col = rel.join.join_source_columns[0]
+                join_target_col = rel.join.join_target_columns[0]
+
+                junction_plan = QueryPlan(
+                    table=TableRef(schema=join_schema, name=join_table_name),
+                    batch_column=join_source_col,
+                    batch_values=list(keys),
+                )
+
+                compiler = self.db_adapter.compiler()
+                junction_query = compiler.compile(junction_plan)
+                junction_result = await self.db_adapter.execute(junction_query)
+
+                target_keys_set = set()
+                source_to_targets: dict[Any, list[Any]] = defaultdict(list)
+                for row in junction_result.data:
+                    s_key = row[join_source_col]
+                    t_key = row[join_target_col]
+                    target_keys_set.add(t_key)
+                    source_to_targets[s_key].append(t_key)
+
+                target_keys = list(target_keys_set)
+
+                if not target_keys:
+                    return [[] for _ in keys]
+
+                target_col = rel.join.target_columns[0]
+                target_schema = self.schema_map.get(rel.target_type, "public")
+
+                auth_filter: FilterGroup | FilterCondition | None = None
+                if self.auth_engine:
+                    auth_filter = self.auth_engine.get_read_filter(rel.target_type, self.auth_ctx)
+
+                target_plan = QueryPlan(
+                    table=TableRef(schema=target_schema, name=rel.target_type),
+                    batch_column=target_col,
+                    batch_values=target_keys,
+                    filter_tree=auth_filter,
+                )
+
+                target_query = compiler.compile(target_plan)
+                target_result = await self.db_adapter.execute(target_query)
+
+                target_map = {row[target_col]: row for row in target_result.data}
+
+                output = []
+                for k in keys:
+                    t_keys = source_to_targets.get(k, [])
+                    t_rows = [target_map[tk] for tk in t_keys if tk in target_map]
+                    output.append(t_rows)
+
+                return output
+
+            # Standard 1-query logic for one_to_one, one_to_many, many_to_one
+            target_col = rel.join.target_columns[0]
             target_schema = self.schema_map.get(rel.target_type, "public")
 
-            # Build authorization filter for the target table
-            auth_filter: FilterGroup | FilterCondition | None = None
+            auth_filter = None
             if self.auth_engine:
                 auth_filter = self.auth_engine.get_read_filter(rel.target_type, self.auth_ctx)
 
@@ -81,12 +141,10 @@ class DataLoaderRegistry:
             compiled_query = compiler.compile(plan)
             result = await self.db_adapter.execute(compiled_query)
 
-            # Group results by key
             if rel.kind == "many_to_one" or rel.kind == "one_to_one":
-                result_map: dict[Any, Any] = {row[target_col]: row for row in result.data}
+                result_map = {row[target_col]: row for row in result.data}
                 return [result_map.get(k) for k in keys]
             else:
-                # one_to_many or many_to_many
                 result_list_map: dict[Any, list[Any]] = defaultdict(list)
                 for row in result.data:
                     result_list_map[row[target_col]].append(row)

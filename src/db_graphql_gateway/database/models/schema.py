@@ -34,6 +34,8 @@ class Relationship:
     source_columns: list[str]
     target_columns: list[str]
     join_table: str | None = None
+    join_source_columns: list[str] | None = None
+    join_target_columns: list[str] | None = None
 
 
 @dataclass

@@ -45,6 +45,8 @@ class JoinPath:
     source_columns: list[str]
     target_columns: list[str]
     join_table: TableRef | None = None
+    join_source_columns: list[str] | None = None
+    join_target_columns: list[str] | None = None
 
 
 @dataclass
