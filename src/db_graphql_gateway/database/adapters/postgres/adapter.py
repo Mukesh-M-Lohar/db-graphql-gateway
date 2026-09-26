@@ -56,7 +56,9 @@ class PostgresAdapter(DatabaseAdapter):
             )
             params = [p.value if isinstance(p, enum.Enum) else p for p in raw_params]
             records = await conn.fetch(query.sql, *params)
-            return QueryResult(data=[dict(record) for record in records])
+            return QueryResult(
+                data=[dict(record) for record in records], rows_affected=len(records)
+            )
 
     async def execute_many(self, queries: list[CompiledQuery]) -> list[QueryResult]:
         if not self.pool:
@@ -71,7 +73,9 @@ class PostgresAdapter(DatabaseAdapter):
                 )
                 params = [p.value if isinstance(p, enum.Enum) else p for p in raw_params]
                 records = await conn.fetch(query.sql, *params)
-                results.append(QueryResult(data=[dict(r) for r in records]))
+                results.append(
+                    QueryResult(data=[dict(r) for r in records], rows_affected=len(records))
+                )
         return results
 
     async def execute_raw_dml(self, sql: str) -> None:

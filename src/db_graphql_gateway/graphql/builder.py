@@ -412,7 +412,7 @@ class GraphQLSchemaBuilder:
             compiled_query = compiler.compile_mutation(plan)
 
             result = await self.db_adapter.execute(compiled_query)
-            if not result.data:
+            if result.rows_affected == 0:
                 if has_version and expected_version is not None:
                     from graphql import GraphQLError
 
@@ -471,6 +471,8 @@ class GraphQLSchemaBuilder:
             compiled_query = compiler.compile_mutation(plan)
 
             result = await self.db_adapter.execute(compiled_query)
+            if result.rows_affected == 0:
+                return None
             if not result.data:
                 # Fallback for hard deletes where adapter doesn't return the row
                 if len(pk_cols) > 1:

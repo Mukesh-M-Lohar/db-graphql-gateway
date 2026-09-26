@@ -23,8 +23,9 @@ class TableRef:
 
 
 class QueryResult:
-    def __init__(self, data: list[dict[str, Any]]) -> None:
+    def __init__(self, data: list[dict[str, Any]], rows_affected: int = 0) -> None:
         self.data = data
+        self.rows_affected = rows_affected
 
 
 @dataclass
