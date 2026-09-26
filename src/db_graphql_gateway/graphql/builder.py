@@ -251,6 +251,8 @@ class GraphQLSchemaBuilder:
             order_by: Optional[list[Any]] = None,
             first: Optional[int] = None,
             after: Optional[str] = None,
+            last: Optional[int] = None,
+            before: Optional[str] = None,
         ) -> Connection[return_type]:  # type: ignore
             if info.context is not None and "dataloader_registry" not in info.context:
                 auth_ctx_conn: AuthContext | None = (
@@ -263,10 +265,34 @@ class GraphQLSchemaBuilder:
                     auth_ctx=auth_ctx_conn,
                 )
 
-            requested_limit = first if first is not None else self.max_page_size
-            effective_limit = min(requested_limit, self.max_page_size)
+            if first is not None and last is not None:
+                raise ValueError("Passing both 'first' and 'last' is not supported.")
 
-            current_offset = decode_cursor(after) if after else 0
+            current_offset = 0
+            requested_limit = self.max_page_size
+
+            if first is not None:
+                requested_limit = first
+                if after:
+                    current_offset = decode_cursor(after)
+            elif last is not None:
+                requested_limit = last
+                if before:
+                    before_idx = decode_cursor(before) - 1
+                    current_offset = max(0, before_idx - last)
+                    requested_limit = before_idx - current_offset
+                else:
+                    raise ValueError(
+                        "'last' without 'before' is not supported with offset-based cursors."
+                    )
+            else:
+                if after:
+                    current_offset = decode_cursor(after)
+                if before:
+                    before_idx = decode_cursor(before) - 1
+                    requested_limit = min(self.max_page_size, before_idx)
+
+            effective_limit = min(requested_limit, self.max_page_size)
 
             filter_tree = parse_filter_input(where)
 
@@ -514,6 +540,8 @@ class GraphQLSchemaBuilder:
                 "order_by": Optional[list[order_by_input_type]],  # type: ignore[valid-type]
                 "first": Optional[int],
                 "after": Optional[str],
+                "last": Optional[int],
+                "before": Optional[str],
                 "return": conn_type,
             }
 
