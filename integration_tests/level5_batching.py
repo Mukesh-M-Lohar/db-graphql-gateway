@@ -54,8 +54,6 @@ async def _seed_posts_for_user(user_id: int, post_count: int, tenant_id: int) ->
     the server exposes and it keeps seeding consistent between adapters.
     """
     post_ids: list[int] = []
-    # Batch in groups of 50 to avoid query complexity limits
-    batch = 50
     for i in range(post_count):
         idx = i + 1
         q = f"""
