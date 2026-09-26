@@ -33,7 +33,7 @@ def make_graphql_router(
     max_depth: int | None = 15,
     max_tokens: int | None = 2000,
     disable_introspection: bool = False,
-    context_getter: Any | None = None,
+    **kwargs: Any,
 ) -> "GraphQLRouter":
     if not _HAS_FASTAPI:
         raise ImportError(
@@ -69,6 +69,7 @@ def make_graphql_router(
             context["auth_context"] = auth_context
         return context
 
-    final_context_getter = context_getter or default_context_getter
+    # If context_getter is not explicitly provided in kwargs, use our default auth wrapper
+    kwargs.setdefault("context_getter", default_context_getter)
 
-    return GraphQLRouter(schema=schema, context_getter=final_context_getter, path=path)
+    return GraphQLRouter(schema=schema, path=path, **kwargs)
