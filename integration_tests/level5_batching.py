@@ -472,7 +472,7 @@ async def test_circular_reference(tenant_id: int, user_id: int) -> dict[str, Any
                 node {
                     id
                     username
-                    posts(first: 5) {
+                    posts {
                         id
                         title
                         users {
