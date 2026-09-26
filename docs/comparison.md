@@ -4,19 +4,24 @@ There are several excellent tools in the "Database-to-GraphQL" ecosystem. Howeve
 
 This document provides an honest, detailed comparison, outlining both what `db-graphql-gateway` uniquely offers and **what it does not offer** by design.
 
-## 📊 Feature Matrix
+## 📊 Detailed Feature Matrix
 
 | Feature | `db-graphql-gateway` | PostGraphile | Supabase / `pg_graphql` | Hasura |
 | :--- | :--- | :--- | :--- | :--- |
 | **Primary Language** | Python (ASGI) | Node.js / TypeScript | Rust | Haskell |
 | **Databases** | Postgres, MySQL, SQLite | PostgreSQL only | PostgreSQL only | Postgres, MS SQL, BigQuery |
+| **Deployment Model** | Python Library (embedded) | Node.js Server / CLI | Native DB Extension | Standalone Docker / Cloud |
 | **Auth Model** | App-Tier (SQL Predicates) | DB-Tier (RLS) | DB-Tier (RLS) | App-Tier (Metadata) |
-| **Extensibility** | Native Python / Strawberry | Node.js Plugins | PostgreSQL Functions | Webhooks / Actions |
-| **Deployment** | Python Library | Node.js Server / CLI | Native DB Extension | Standalone Docker / Cloud |
 | **N+1 Prevention** | ✅ Yes (DataLoaders) | ✅ Yes (Lookahead) | ✅ Yes (Native SQL) | ✅ Yes (Native SQL) |
-| **Mutations** | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes |
-| **Subscriptions** | ❌ No | ✅ Yes | ❌ No | ✅ Yes |
+| **Query Filtering** | ✅ Deep Relational Filtering | ✅ Yes (via plugins) | ✅ Basic Filtering | ✅ Deep Relational Filtering |
+| **Pagination** | ✅ Relay (Forward & Backward) | ✅ Relay (Forward & Backward) | ✅ Relay (Forward & Backward) | ✅ Offset & Keyset |
+| **Sorting (Order By)** | ✅ Yes (Multiple Columns) | ✅ Yes | ✅ Yes | ✅ Yes |
+| **Mutations** | ✅ Create, Update, Delete | ✅ Yes | ✅ Yes | ✅ Yes |
+| **Subscriptions (Realtime)**| ❌ No | ✅ Yes (Listen/Notify) | ❌ No | ✅ Yes (Best-in-class) |
 | **API Federation** | ❌ No | 🟡 Schema Stitching | ❌ No | ✅ Yes (Remote Schemas) |
+| **Custom Resolvers** | ✅ Native Python (Strawberry) | ✅ Node.js Plugins / MakeExtend | ❌ Requires Postgres Functions | ✅ Actions / Webhooks |
+| **AST Security (Depth/Aliases)**| ✅ Built-in (Configurable limits) | ✅ Yes (via plugins) | ✅ Built-in (Max Depth) | ✅ Built-in (Pro version) |
+| **Schema Overrides (Hiding)** | ✅ YAML Config (`sgql.yaml`) | ✅ SQL Smart Tags (Comments) | ✅ SQL Smart Tags (Comments) | ✅ Web Console / YAML |
 
 ---
 
