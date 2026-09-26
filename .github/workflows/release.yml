@@ -36,6 +36,8 @@ jobs:
         uses: python-semantic-release/python-semantic-release@v9.8.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          push: 'false'
+          vcs_release: 'false'
           
       - name: Push tag to remote
         if: steps.semantic-release.outputs.released == 'true'
