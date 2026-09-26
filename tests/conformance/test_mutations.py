@@ -126,19 +126,7 @@ async def test_composite_pk(gql_schema: tuple[Any, Any]) -> None:
     assert res.data is not None
     assert res.data["create_user_roles"]["assigned_by"] == 99
 
-    # Update - passing a JSON object for ID requires GraphQL variables since {user_id: 1, role_id: 2} is parsed as nested objects instead of JSON if written as literal, wait!
-    # Strawberry JSON scalar parses inline `{ user_id: 1, role_id: 2 }` just fine.
-    mutation_update = """
-    mutation {
-        update_user_roles(id: { user_id: 1, role_id: 2 }, input: { assigned_by: 100 }) {
-            user_id
-            role_id
-            assigned_by
-        }
-    }
-    """
-    # Wait, actually in GraphQL a JSON literal object like `{ user_id: 1, role_id: 2 }` is invalid syntax for a scalar literal unless parsed by the scalar itself. Strawberry JSON scalar parses object literals!
-    # If it fails, I'll use variables.
+    # Update - passing a JSON object for ID requires GraphQL variables since {user_id: 1, role_id: 2} is parsed as nested objects instead of JSON if written as literal.
     res = await schema.execute(
         "mutation($id: JSON!) { update_user_roles(id: $id, input: { assigned_by: 100 }) { assigned_by } }",
         variable_values={"id": {"user_id": 1, "role_id": 2}},
