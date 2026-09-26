@@ -321,13 +321,10 @@ class GraphQLSchemaBuilder:
 
             if last is not None:
                 has_next_page = False
-                has_previous_page = current_offset > 0
-            elif first is not None:
-                has_next_page = len(rows) > effective_limit
-                has_previous_page = False
             else:
                 has_next_page = len(rows) > effective_limit
-                has_previous_page = current_offset > 0
+
+            has_previous_page = current_offset > 0
 
             data_rows = rows[:effective_limit]
 

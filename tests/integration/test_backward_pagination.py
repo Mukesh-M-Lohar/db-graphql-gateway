@@ -49,6 +49,7 @@ async def test_backward_pagination(pg_adapter_with_data: Any) -> None:
         "query { items_connection(first: 6, order_by: [{ id: ASC }]) { edges { cursor node { id name } } page_info { has_next_page has_previous_page start_cursor end_cursor } } }"
     )
     assert res1.errors is None
+    assert res1.data is not None
     edges = res1.data["items_connection"]["edges"]
     assert len(edges) == 6
 
@@ -59,6 +60,7 @@ async def test_backward_pagination(pg_adapter_with_data: Any) -> None:
         f'query {{ items_connection(last: 2, before: "{cursor_D}", order_by: [{{ id: ASC }}]) {{ edges {{ cursor node {{ id name }} }} page_info {{ has_next_page has_previous_page start_cursor end_cursor }} }} }}'
     )
     assert res2.errors is None
+    assert res2.data is not None
     edges2 = res2.data["items_connection"]["edges"]
     assert len(edges2) == 2
     assert edges2[0]["node"]["name"] == "B"
