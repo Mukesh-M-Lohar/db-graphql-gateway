@@ -42,6 +42,9 @@ def make_graphql_router(
         if auth_provider and request:
             headers = {k.lower(): v for k, v in request.headers.items()}
             auth_context = await auth_provider.authenticate(headers)
+            if auth_context.error:
+                from fastapi import HTTPException
+                raise HTTPException(status_code=401, detail=auth_context.error)
             context["auth_context"] = auth_context
         return context
 
