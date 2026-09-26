@@ -57,5 +57,8 @@ class MySQLTypeMapper(TypeMapper):
         if t == "json":
             return "JSON"
 
+        if t.endswith("_enum"):
+            return column.type
+
         # All text / binary types → String
         return "String"

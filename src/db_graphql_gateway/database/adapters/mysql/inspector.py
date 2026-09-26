@@ -92,6 +92,19 @@ class MySQLSchemaInspector(SchemaInspector):
                     is_pk: bool = row["COLUMN_KEY"].upper() == "PRI"
                     is_fk: bool = False  # updated in FK pass below
 
+                    if col_type.startswith("enum("):
+                        import re
+                        from db_graphql_gateway.database.models.schema import Enum
+
+                        match = re.match(r"enum\((.*)\)", col_type, re.IGNORECASE)
+                        if match:
+                            inner = match.group(1)
+                            # Split by comma and strip quotes (ignoring escaped quotes for simplicity)
+                            enum_vals = [v.strip("'") for v in inner.replace("''", "'").split(",")]
+                            enum_name = f"{tname}_{col_name}_enum"
+                            ns.enums[enum_name] = Enum(name=enum_name, values=enum_vals)
+                            col_type = enum_name
+
                     col = Column(
                         name=col_name,
                         type=col_type,

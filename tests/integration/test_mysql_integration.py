@@ -71,7 +71,7 @@ def mysql_container() -> Generator[MySqlContainer, None, None]:
 async def mysql_adapter(mysql_container: MySqlContainer) -> AsyncGenerator[MySQLAdapter, None]:
     """MySQLAdapter connected to the test container with a fresh schema."""
     host = mysql_container.get_container_host_ip()
-    port = int(mysql_container.get_exposed_port(3306))
+    port = mysql_container.get_exposed_port(3306)
     database = getattr(mysql_container, "dbname", "test")
     user = getattr(mysql_container, "username", "test")
     password = getattr(mysql_container, "password", "test")
@@ -98,6 +98,7 @@ async def mysql_adapter(mysql_container: MySqlContainer) -> AsyncGenerator[MySQL
                     name       VARCHAR(255) NOT NULL,
                     owner_id   INT,
                     is_active  TINYINT(1) DEFAULT 1,
+                    status     ENUM('active', 'inactive', 'banned') DEFAULT 'active',
                     deleted_at DATETIME
                 )
                 """
@@ -224,6 +225,36 @@ async def test_tinyint1_mapped_to_boolean(mysql_adapter: MySQLAdapter) -> None:
     gql_type = mapper.to_graphql_type(is_active_col)
     assert gql_type == "Boolean", f"Expected Boolean, got {gql_type!r}"
 
+
+# ---------------------------------------------------------------------------
+# Enum mapped to enum
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_mysql_enum_mapped_to_enum(mysql_adapter: MySQLAdapter) -> None:
+    inspector = mysql_adapter.inspector()
+    db_schema = await inspector.discover_schema()
+
+    ns = db_schema.namespaces.get(mysql_adapter.database)
+    assert ns is not None
+    users_table = ns.tables.get("users")
+    assert users_table is not None
+
+    status_col = next((c for c in users_table.columns if c.name == "status"), None)
+    assert status_col is not None, "status column not found"
+
+    # Type mapper should map it to the synthetic enum name
+    mapper = mysql_adapter.type_mapper()
+    gql_type = mapper.to_graphql_type(status_col)
+    assert gql_type == f"users_status_enum", f"Expected users_status_enum, got {gql_type!r}"
+
+    # Also test the GraphQL schema builds it correctly
+    ir_types = IRBuilder(type_mapper=mapper).build(db_schema, GatewayConfig())
+    schema = GraphQLSchemaBuilder(db_adapter=mysql_adapter).build(ir_types, db_schema)
+    
+    # Check that the enum exists in the schema
+    enum_type = schema.get_type_by_name("users_status_enum")
+    assert enum_type is not None, "Enum type users_status_enum not found in GraphQL schema"
 
 # ---------------------------------------------------------------------------
 # Auth predicate pushdown
