@@ -1,6 +1,4 @@
 ---
-hide:
-  - navigation
 ---
 
 # db-graphql-gateway
