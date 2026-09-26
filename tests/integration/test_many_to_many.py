@@ -19,6 +19,8 @@ async def pg_adapter_m2m_data(postgres_container: Any) -> AsyncGenerator[Any, No
     adapter = PostgresAdapter(url)
     await adapter.connect()
 
+    assert adapter.pool is not None
+
     async with adapter.pool.acquire() as conn:
         await conn.execute(
             """
