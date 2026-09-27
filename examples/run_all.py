@@ -7,9 +7,9 @@ from core import create_gateway_app
 from run_sqlite import setup_db
 
 if __name__ == "__main__":
-    setup_db()
+    db_path = setup_db()
     
-    sqlite_adapter = SQLiteAdapter("example.db")
+    sqlite_adapter = SQLiteAdapter(db_path)
     sqlite_app = create_gateway_app(sqlite_adapter)
     
     dsn = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/postgres")
