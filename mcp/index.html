@@ -1,0 +1,1887 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A database-agnostic GraphQL gateway that pushes authorization and filtering down to SQL.">
+      
+      
+      
+        <link rel="canonical" href="https://forgedlohar.github.io/db-graphql-gateway/mcp/">
+      
+      
+        <link rel="prev" href="../cli/">
+      
+      
+        <link rel="next" href="../testing/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>MCP Integration - db-graphql-gateway</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="pink" data-md-color-accent="pink">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#mcp-integration" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="db-graphql-gateway" class="md-header__button md-logo" aria-label="db-graphql-gateway" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            db-graphql-gateway
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              MCP Integration
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="pink" data-md-color-accent="pink"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="pink" data-md-color-accent="pink"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="pink" data-md-color-accent="pink"  aria-label="Switch to system preference"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to system preference" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/forgedlohar/db-graphql-gateway" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    forgedlohar/db-graphql-gateway
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href=".." class="md-tabs__link">
+          
+  
+  
+  Overview
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../quickstart/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../CONTRIBUTING_ADAPTER/" class="md-tabs__link">
+          
+  
+  
+  Extending the Gateway
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../SECURITY/" class="md-tabs__link">
+          
+  
+  
+  Production
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../CHANGELOG/" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="db-graphql-gateway" class="md-nav__button md-logo" aria-label="db-graphql-gateway" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    db-graphql-gateway
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/forgedlohar/db-graphql-gateway" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    forgedlohar/db-graphql-gateway
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Overview
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Comparison
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARCHITECTURE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP Integration
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="Page contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Page contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scope-enforcement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scope enforcement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#auth-identity-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Auth / Identity mapping
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#client-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Client configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Client configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#claude-desktop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Claude Desktop
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#claude-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Claude Code
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cursor-windsurf-other-stdio-clients" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cursor / Windsurf / other stdio clients
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-reference-sgql-mcpyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration reference (sgql-mcp.yaml)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-the-schema-resource" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using the schema resource
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tool-usage-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tool usage examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audit-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audit logging
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#remote-transport-sse-http" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Remote transport (SSE / HTTP)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-the-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running the tests
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FAQ/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extending the Gateway
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Extending the Gateway
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTRIBUTING_ADAPTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Adapter Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Production
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Production
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SECURITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../BENCHMARKS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance & Benchmarks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="Page contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Page contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scope-enforcement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scope enforcement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#auth-identity-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Auth / Identity mapping
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#client-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Client configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Client configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#claude-desktop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Claude Desktop
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#claude-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Claude Code
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cursor-windsurf-other-stdio-clients" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cursor / Windsurf / other stdio clients
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-reference-sgql-mcpyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration reference (sgql-mcp.yaml)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-the-schema-resource" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using the schema resource
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tool-usage-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tool usage examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audit-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audit logging
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#remote-transport-sse-http" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Remote transport (SSE / HTTP)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-the-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running the tests
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="mcp-integration">MCP Integration<a class="headerlink" href="#mcp-integration" title="Permanent link">&para;</a></h1>
+<p>Connect Claude Desktop, Claude Code, Cursor, Windsurf, and any other MCP-compatible agent directly to your sgql gateway — with <strong>scoped, enforced permissions</strong> at the MCP layer.</p>
+<hr />
+<h2 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
+<p>The sgql MCP server is a <strong>thin stdio/HTTP adapter</strong> that sits between an MCP client and the existing sgql gateway HTTP endpoint. It exposes two tools and one resource:</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Scope</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>graphql_query</code></td>
+<td>Tool</td>
+<td><code>read</code> + <code>write</code></td>
+<td>Execute a GraphQL <code>query</code> document</td>
+</tr>
+<tr>
+<td><code>graphql_mutate</code></td>
+<td>Tool</td>
+<td><code>write</code> only</td>
+<td>Execute a GraphQL <code>mutation</code> document</td>
+</tr>
+<tr>
+<td><code>sgql://schema</code></td>
+<td>Resource</td>
+<td>always</td>
+<td>Current GraphQL SDL (schema definition)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>No gateway logic is reimplemented.</strong> Every call is forwarded to the existing <code>/graphql</code> HTTP endpoint via <code>httpx</code>. This means:</p>
+<ul>
+<li>✅ Existing JWT auth + SQL row-level predicates apply to every MCP call</li>
+<li>✅ Complexity, depth, and alias limits apply to every MCP call</li>
+<li>✅ DataLoader batching and field masking apply to every MCP call</li>
+<li>✅ The MCP server adds zero duplication</li>
+</ul>
+<hr />
+<h2 id="scope-enforcement">Scope enforcement<a class="headerlink" href="#scope-enforcement" title="Permanent link">&para;</a></h2>
+<p>The <code>scope</code> setting controls <strong>which tools are registered</strong> — an agent cannot call a tool that was never registered:</p>
+<div class="language-text highlight"><pre><span></span><code>scope: read   →  graphql_query  only  (graphql_mutate is not visible at all)
+scope: write  →  graphql_query + graphql_mutate
+</code></pre></div>
+<blockquote>
+<p>[!IMPORTANT]
+Scope is enforced at the MCP layer by <strong>not registering</strong> the mutation tool in read scope. The gateway's own auth is an additional, independent layer. Both apply; neither replaces the other.</p>
+</blockquote>
+<hr />
+<h2 id="auth-identity-mapping">Auth / Identity mapping<a class="headerlink" href="#auth-identity-mapping" title="Permanent link">&para;</a></h2>
+<p>The gateway expects a <strong>JWT Bearer token</strong> in the <code>Authorization</code> HTTP header. The MCP server forwards a single <strong>config-time token</strong> on every request.</p>
+<div class="language-text highlight"><pre><span></span><code>MCP client
+    │ (no auth required for local stdio)
+    ▼
+sgql MCP server
+    │ adds: Authorization: Bearer &lt;gateway_token&gt;
+    ▼
+sgql gateway (validates JWT, derives AuthContext → SQL predicates)
+    │ row-level security filters rows based on user_id / tenant_id claims
+    ▼
+Database
+</code></pre></div>
+<p>Generate a token for your service account:</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">jwt</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"iss"</span><span class="p">:</span> <span class="s2">"your-issuer"</span><span class="p">,</span>
+    <span class="s2">"aud"</span><span class="p">:</span> <span class="s2">"your-audience"</span><span class="p">,</span>
+    <span class="s2">"sub"</span><span class="p">:</span> <span class="s2">"mcp-service-account"</span><span class="p">,</span>
+    <span class="s2">"user_id"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">"tenant_id"</span><span class="p">:</span> <span class="mi">42</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">token</span> <span class="o">=</span> <span class="n">jwt</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="s2">"your-hs256-secret"</span><span class="p">,</span> <span class="n">algorithm</span><span class="o">=</span><span class="s2">"HS256"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+</code></pre></div>
+<blockquote>
+<p>[!WARNING]
+For stdio transport, the token is stored in <code>sgql-mcp.yaml</code> on disk.<br />
+Set <code>gateway_token: null</code> and use the <code>SGQL_GATEWAY_TOKEN</code> environment variable in production to avoid storing secrets in config files.</p>
+</blockquote>
+<hr />
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span class="c1"># Install with mcp extra</span>
+pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"db-graphql-gateway[mcp]"</span>
+
+<span class="c1"># or with uv</span>
+uv<span class="w"> </span>add<span class="w"> </span><span class="s2">"db-graphql-gateway[mcp]"</span>
+</code></pre></div>
+<hr />
+<h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
+<p><strong>1. Create <code>sgql-mcp.yaml</code> in your project root:</strong></p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Read-only</label><label for="__tabbed_1_2">Write (full access)</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-yaml highlight"><pre><span></span><code><span class="nt">scope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">read</span>
+<span class="nt">gateway_url</span><span class="p">:</span><span class="w"> </span><span class="s">"http://localhost:8000/graphql"</span>
+<span class="nt">gateway_token</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">   </span><span class="c1"># use SGQL_GATEWAY_TOKEN env var</span>
+<span class="nt">transport</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stdio</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-yaml highlight"><pre><span></span><code><span class="nt">scope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">write</span>
+<span class="nt">gateway_url</span><span class="p">:</span><span class="w"> </span><span class="s">"http://localhost:8000/graphql"</span>
+<span class="nt">gateway_token</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">   </span><span class="c1"># use SGQL_GATEWAY_TOKEN env var</span>
+<span class="nt">transport</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stdio</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p><strong>2. Set the gateway token:</strong></p>
+<div class="language-bash highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">SGQL_GATEWAY_TOKEN</span><span class="o">=</span><span class="s2">"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."</span>
+</code></pre></div>
+<p><strong>3. Start the MCP server:</strong></p>
+<div class="language-bash highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>db_graphql_gateway.mcp
+<span class="c1"># or, if installed as a script:</span>
+sgql-mcp
+</code></pre></div>
+<hr />
+<h2 id="client-configuration">Client configuration<a class="headerlink" href="#client-configuration" title="Permanent link">&para;</a></h2>
+<h3 id="claude-desktop">Claude Desktop<a class="headerlink" href="#claude-desktop" title="Permanent link">&para;</a></h3>
+<p>Add the following to <code>~/Library/Application Support/Claude/claude_desktop_config.json</code> (macOS) or <code>%APPDATA%\Claude\claude_desktop_config.json</code> (Windows):</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:3"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><input id="__tabbed_2_3" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Read-only</label><label for="__tabbed_2_2">Write</label><label for="__tabbed_2_3">With config file</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-json highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"mcpServers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"sgql"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"python"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"args"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"-m"</span><span class="p">,</span><span class="w"> </span><span class="s2">"db_graphql_gateway.mcp"</span><span class="p">],</span>
+<span class="w">      </span><span class="nt">"env"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">"SGQL_MCP_SCOPE"</span><span class="p">:</span><span class="w"> </span><span class="s2">"read"</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"SGQL_GATEWAY_URL"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://localhost:8000/graphql"</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"SGQL_GATEWAY_TOKEN"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;your-jwt-token&gt;"</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-json highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"mcpServers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"sgql"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"python"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"args"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"-m"</span><span class="p">,</span><span class="w"> </span><span class="s2">"db_graphql_gateway.mcp"</span><span class="p">],</span>
+<span class="w">      </span><span class="nt">"env"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">"SGQL_MCP_SCOPE"</span><span class="p">:</span><span class="w"> </span><span class="s2">"write"</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"SGQL_GATEWAY_URL"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://localhost:8000/graphql"</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"SGQL_GATEWAY_TOKEN"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;your-jwt-token&gt;"</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-json highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"mcpServers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"sgql"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"python"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"args"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"-m"</span><span class="p">,</span><span class="w"> </span><span class="s2">"db_graphql_gateway.mcp"</span><span class="p">,</span><span class="w"> </span><span class="s2">"--config"</span><span class="p">,</span><span class="w"> </span><span class="s2">"/path/to/sgql-mcp.yaml"</span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<h3 id="claude-code">Claude Code<a class="headerlink" href="#claude-code" title="Permanent link">&para;</a></h3>
+<p>Add to your project's <code>.mcp.json</code> or Claude Code's MCP settings:</p>
+<div class="language-json highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"mcpServers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"sgql"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"python"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"args"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"-m"</span><span class="p">,</span><span class="w"> </span><span class="s2">"db_graphql_gateway.mcp"</span><span class="p">],</span>
+<span class="w">      </span><span class="nt">"env"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">"SGQL_MCP_SCOPE"</span><span class="p">:</span><span class="w"> </span><span class="s2">"read"</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"SGQL_GATEWAY_URL"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://localhost:8000/graphql"</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"SGQL_GATEWAY_TOKEN"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;your-jwt-token&gt;"</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="cursor-windsurf-other-stdio-clients">Cursor / Windsurf / other stdio clients<a class="headerlink" href="#cursor-windsurf-other-stdio-clients" title="Permanent link">&para;</a></h3>
+<p>Any stdio-based MCP client works identically — point the <code>command</code> to <code>python -m db_graphql_gateway.mcp</code> and pass scope/token via environment variables.</p>
+<hr />
+<h2 id="configuration-reference-sgql-mcpyaml">Configuration reference (<code>sgql-mcp.yaml</code>)<a class="headerlink" href="#configuration-reference-sgql-mcpyaml" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scope</code></td>
+<td><code>"read"</code> | <code>"write"</code></td>
+<td><code>"read"</code></td>
+<td>MCP operation scope</td>
+</tr>
+<tr>
+<td><code>gateway_url</code></td>
+<td>string</td>
+<td><code>"http://localhost:8000/graphql"</code></td>
+<td>GraphQL endpoint URL</td>
+</tr>
+<tr>
+<td><code>gateway_token</code></td>
+<td>string | null</td>
+<td>null</td>
+<td>JWT Bearer token (or use <code>SGQL_GATEWAY_TOKEN</code>)</td>
+</tr>
+<tr>
+<td><code>transport</code></td>
+<td><code>"stdio"</code> | <code>"sse"</code> | <code>"streamable-http"</code></td>
+<td><code>"stdio"</code></td>
+<td>MCP transport</td>
+</tr>
+<tr>
+<td><code>host</code></td>
+<td>string</td>
+<td><code>"127.0.0.1"</code></td>
+<td>Host for SSE/HTTP transports</td>
+</tr>
+<tr>
+<td><code>port</code></td>
+<td>int</td>
+<td><code>8765</code></td>
+<td>Port for SSE/HTTP transports</td>
+</tr>
+<tr>
+<td><code>schema_resource_uri</code></td>
+<td>string</td>
+<td><code>"sgql://schema"</code></td>
+<td>URI for the schema resource</td>
+</tr>
+<tr>
+<td><code>request_timeout</code></td>
+<td>float</td>
+<td><code>30.0</code></td>
+<td>HTTP timeout for gateway calls (seconds)</td>
+</tr>
+</tbody>
+</table>
+<p>All settings can be overridden via CLI flags or environment variables:</p>
+<table>
+<thead>
+<tr>
+<th>Env var</th>
+<th>CLI flag</th>
+<th>Overrides</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SGQL_MCP_CONFIG</code></td>
+<td><code>--config</code></td>
+<td>config file path</td>
+</tr>
+<tr>
+<td><code>SGQL_MCP_SCOPE</code></td>
+<td><code>--scope</code></td>
+<td><code>scope</code></td>
+</tr>
+<tr>
+<td><code>SGQL_GATEWAY_URL</code></td>
+<td><code>--gateway-url</code></td>
+<td><code>gateway_url</code></td>
+</tr>
+<tr>
+<td><code>SGQL_GATEWAY_TOKEN</code></td>
+<td><code>--gateway-token</code></td>
+<td><code>gateway_token</code></td>
+</tr>
+<tr>
+<td><code>SGQL_MCP_TRANSPORT</code></td>
+<td><code>--transport</code></td>
+<td><code>transport</code></td>
+</tr>
+<tr>
+<td><code>SGQL_MCP_HOST</code></td>
+<td><code>--host</code></td>
+<td><code>host</code></td>
+</tr>
+<tr>
+<td><code>SGQL_MCP_PORT</code></td>
+<td><code>--port</code></td>
+<td><code>port</code></td>
+</tr>
+<tr>
+<td><code>SGQL_MCP_LOG_LEVEL</code></td>
+<td><code>--log-level</code></td>
+<td>log verbosity</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="using-the-schema-resource">Using the schema resource<a class="headerlink" href="#using-the-schema-resource" title="Permanent link">&para;</a></h2>
+<p>Before sending a query, fetch the schema to discover available types:</p>
+<div class="language-text highlight"><pre><span></span><code># In any MCP client that supports resources:
+sgql://schema
+</code></pre></div>
+<p>The resource returns a human-readable SDL summary of all types, fields, queries, and mutations. This respects the gateway's field masking (hidden/sensitive fields are not returned by the gateway's introspection, so they won't appear here either).</p>
+<blockquote>
+<p>[!NOTE]
+If the gateway has <code>disable_introspection: true</code> set, the schema resource will return a notice explaining that introspection is disabled. This is intentional — the MCP server does not bypass production security settings.</p>
+</blockquote>
+<hr />
+<h2 id="tool-usage-examples">Tool usage examples<a class="headerlink" href="#tool-usage-examples" title="Permanent link">&para;</a></h2>
+<p>Once connected, an agent can:</p>
+<div class="language-text highlight"><pre><span></span><code># Discover schema
+Read resource: sgql://schema
+
+# Query data
+Use tool: graphql_query
+  query: "query { users { id username } }"
+  variables: "{}"
+
+# (write scope only) Create a record
+Use tool: graphql_mutate
+  mutation: "mutation { create_posts(input: { title: \"Hello\" }) { id title } }"
+  variables: "{}"
+</code></pre></div>
+<hr />
+<h2 id="audit-logging">Audit logging<a class="headerlink" href="#audit-logging" title="Permanent link">&para;</a></h2>
+<p>Every MCP tool call is logged (to stderr) with:</p>
+<div class="language-text highlight"><pre><span></span><code>sgql.mcp INFO  MCP_AUDIT ts=2026-01-15T10:23:45Z scope=read operation=query identity=&lt;sub-claim&gt; query='query { users { id } }' variables={}
+</code></pre></div>
+<p>Set <code>SGQL_MCP_LOG_LEVEL=DEBUG</code> for verbose output including full request/response headers.</p>
+<hr />
+<h2 id="remote-transport-sse-http">Remote transport (SSE / HTTP)<a class="headerlink" href="#remote-transport-sse-http" title="Permanent link">&para;</a></h2>
+<p>For remote agents (not local stdio), use <code>transport: sse</code> or <code>transport: streamable-http</code>.</p>
+<blockquote>
+<p>[!CAUTION]
+Remote transports expose the MCP server over a network. You MUST put the server behind a reverse proxy with TLS and protect it with a bearer token per connection. The gateway token in <code>sgql-mcp.yaml</code> is a <strong>shared service-account secret</strong> — never expose it to end users; each user should have their own gateway token with appropriate claims.</p>
+</blockquote>
+<div class="language-yaml highlight"><pre><span></span><code><span class="c1"># Remote SSE example</span>
+<span class="nt">scope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">read</span>
+<span class="nt">gateway_url</span><span class="p">:</span><span class="w"> </span><span class="s">"http://internal-gateway:8000/graphql"</span>
+<span class="nt">gateway_token</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># use SGQL_GATEWAY_TOKEN</span>
+<span class="nt">transport</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sse</span>
+<span class="nt">host</span><span class="p">:</span><span class="w"> </span><span class="s">"0.0.0.0"</span>
+<span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8765</span>
+</code></pre></div>
+<hr />
+<h2 id="running-the-tests">Running the tests<a class="headerlink" href="#running-the-tests" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span class="c1"># Unit tests (no gateway required)</span>
+<span class="nb">cd</span><span class="w"> </span>integration_tests
+uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>test_mcp.py<span class="w"> </span>-v<span class="w"> </span>-k<span class="w"> </span><span class="s2">"not TestLiveIntegration"</span>
+
+<span class="c1"># Full integration tests (gateway must be running)</span>
+<span class="nv">SGQL_DATABASE_URL</span><span class="o">=</span>sqlite:///test.db<span class="w"> </span>uvicorn<span class="w"> </span>server:app<span class="w"> </span>--port<span class="w"> </span><span class="m">8000</span><span class="w"> </span><span class="p">&amp;</span>
+uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>test_mcp.py<span class="w"> </span>-v
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.tabs.link", "content.code.annotate", "content.code.copy", "announce.dismiss", "navigation.tabs", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.preview", "navigation.instant.progress", "navigation.path", "navigation.sections", "navigation.top", "navigation.tracking", "search.suggest", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
