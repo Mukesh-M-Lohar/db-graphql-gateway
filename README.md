@@ -15,7 +15,7 @@ A production-grade, reusable Python package that automatically generates a secur
 
 It acts as a bridge between your database and GraphQL, translating GraphQL queries into efficient, parameterized SQL without requiring you to manually write resolvers, define schemas, or worry about the typical pitfalls of database-to-API integrations.
 
-![GraphiQL IDE showing a nested query against db-graphql-gateway with 3 DB queries total](docs/assets/graphiql_demo.jpg)
+![GraphiQL IDE showing a nested query against db-graphql-gateway with 3 DB queries total](docs/assets/graphiql_demo.gif)
 
 > *Live GraphiQL explorer at `localhost:8000/graphql` — zero resolver code written. **3 queries total** for a depth-3 nested query across 5 users.*
 
