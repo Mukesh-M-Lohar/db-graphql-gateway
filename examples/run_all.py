@@ -5,6 +5,7 @@ from db_graphql_gateway.database.adapters.sqlite.adapter import SQLiteAdapter
 from db_graphql_gateway.database.adapters.postgres.adapter import PostgresAdapter
 from core import create_gateway_app
 from run_sqlite import setup_db
+from run_postgres import setup_postgres
 
 if __name__ == "__main__":
     db_path = setup_db()
@@ -12,7 +13,8 @@ if __name__ == "__main__":
     sqlite_adapter = SQLiteAdapter(db_path)
     sqlite_app = create_gateway_app(sqlite_adapter)
     
-    dsn = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/postgres")
+    setup_postgres()
+    dsn = os.getenv("DATABASE_URL", "postgresql://sgql_test:sgql_password@localhost:5433/sgql_test_db")
     postgres_adapter = PostgresAdapter(dsn=dsn)
     postgres_app = create_gateway_app(postgres_adapter)
     

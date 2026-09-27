@@ -55,3 +55,8 @@ site*
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# SQLite Databases
+*.db
+*.sqlite
+*.sqlite3
