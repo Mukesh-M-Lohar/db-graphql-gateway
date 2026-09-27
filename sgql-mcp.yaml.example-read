@@ -1,0 +1,28 @@
+# sgql-mcp.yaml — read-only deployment example
+#
+# This configuration exposes only graphql_query (no mutations).
+# Suitable for: analysts, Claude Desktop, read-only reporting agents.
+
+# MCP operation scope: "read" or "write"
+scope: read
+
+# URL of the running sgql gateway
+gateway_url: "http://localhost:8000/graphql"
+
+# JWT Bearer token the MCP server forwards to the gateway on every request.
+# The gateway's existing JWTAuthenticationProvider validates this token and
+# enforces row-level security (SQL predicates) accordingly.
+# Generate with: python -m db_graphql_gateway.mcp.token_helper (see docs)
+# Or set via env var SGQL_GATEWAY_TOKEN instead.
+gateway_token: null   # set this or use SGQL_GATEWAY_TOKEN env var
+
+# Transport: "stdio" (default, for local Claude Desktop/Code use)
+#            "sse"   (HTTP+SSE for remote agents, needs bearer-per-connection auth)
+#            "streamable-http"
+transport: stdio
+
+# URI clients use to fetch the GraphQL schema resource
+schema_resource_uri: "sgql://schema"
+
+# HTTP timeout in seconds for forwarded requests
+request_timeout: 30.0

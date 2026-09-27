@@ -25,6 +25,7 @@ dependencies = [
     "pydantic>=2.0.0",
     "click>=8.1.0",
     "pyyaml>=6.0.0",
+    "mcp>=1.0.0",
 ]
 dynamic = [
     "version",
@@ -55,9 +56,14 @@ sqlite = [
 mysql = [
     "asyncmy>=0.2.14",
 ]
+mcp = [
+    "mcp>=2.2.0",
+    "httpx>=0.28.1",
+]
 
 [project.scripts]
 sgql = "db_graphql_gateway.cli.main:cli"
+sgql-mcp = "db_graphql_gateway.mcp.__main__:main"
 
 [project.urls]
 Homepage = "https://github.com/forgedlohar/db-graphql-gateway"
