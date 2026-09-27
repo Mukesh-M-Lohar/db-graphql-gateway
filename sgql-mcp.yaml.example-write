@@ -1,0 +1,17 @@
+# sgql-mcp.yaml — write (full access) deployment example
+#
+# This configuration exposes BOTH graphql_query AND graphql_mutate.
+# Use ONLY with a service account that has write access; keep the token secure.
+
+scope: write
+
+gateway_url: "http://localhost:8000/graphql"
+
+# A JWT with write-appropriate claims (user_id, tenant_id, roles, etc.)
+gateway_token: null   # set this or use SGQL_GATEWAY_TOKEN env var
+
+transport: stdio
+
+schema_resource_uri: "sgql://schema"
+
+request_timeout: 30.0
