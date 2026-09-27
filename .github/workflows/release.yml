@@ -38,6 +38,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           push: 'false'
           vcs_release: 'false'
+          commit: 'false'
           
       - name: Push tag to remote
         if: steps.semantic-release.outputs.released == 'true'

@@ -114,7 +114,7 @@ version_toml = []
 branch = "main"
 upload_to_pypi = false
 upload_to_release = false
-build_command = "SETUPTOOLS_SCM_PRETEND_VERSION={version} pip install uv && uv build"
+build_command = "SETUPTOOLS_SCM_PRETEND_VERSION={version} uv build"
 commit_version_number = false
 push = false
 vcs_release = false
