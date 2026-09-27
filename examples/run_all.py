@@ -9,23 +9,25 @@ from run_postgres import setup_postgres
 
 if __name__ == "__main__":
     db_path = setup_db()
-    
+
     sqlite_adapter = SQLiteAdapter(db_path)
     sqlite_app = create_gateway_app(sqlite_adapter)
-    
+
     setup_postgres()
-    dsn = os.getenv("DATABASE_URL", "postgresql://sgql_test:sgql_password@localhost:5433/sgql_test_db")
+    dsn = os.getenv(
+        "DATABASE_URL", "postgresql://sgql_test:sgql_password@localhost:5433/sgql_test_db"
+    )
     postgres_adapter = PostgresAdapter(dsn=dsn)
     postgres_app = create_gateway_app(postgres_adapter)
-    
+
     main_app = FastAPI(title="Multi-DB Gateway")
-    
+
     # Mount the independent gateway apps on different paths
     main_app.mount("/sqlite", sqlite_app)
     main_app.mount("/postgres", postgres_app)
-    
+
     print("Starting Multi-DB Gateway...")
     print("SQLite GraphQL endpoint: http://127.0.0.1:8000/sqlite/graphql")
     print("Postgres GraphQL endpoint: http://127.0.0.1:8000/postgres/graphql")
-    
+
     uvicorn.run(main_app, host="127.0.0.1", port=8000)
