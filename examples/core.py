@@ -30,7 +30,7 @@ def create_gateway_app(adapter, config_path=None):
         schema = schema_builder.build(ir_types=ir, db_schema=db_schema)
         
         graphql_router = make_graphql_router(schema)
-        app.include_router(graphql_router, prefix="/graphql")
+        app.include_router(graphql_router)
         
     @app.on_event("shutdown")
     async def shutdown():
