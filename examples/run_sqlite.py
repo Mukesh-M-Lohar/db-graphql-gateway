@@ -6,7 +6,10 @@ from core import create_gateway_app
 def setup_db():
     conn = sqlite3.connect("example.db")
     conn.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT)")
+    conn.execute("CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY, title TEXT, user_id INTEGER, FOREIGN KEY(user_id) REFERENCES users(id))")
     conn.execute("INSERT OR IGNORE INTO users (id, name) VALUES (1, 'Alice')")
+    conn.execute("INSERT OR IGNORE INTO posts (id, title, user_id) VALUES (1, 'Hello World', 1)")
+    conn.execute("INSERT OR IGNORE INTO posts (id, title, user_id) VALUES (2, 'GraphQL is Awesome', 1)")
     conn.commit()
     conn.close()
 
